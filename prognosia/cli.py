@@ -1,8 +1,8 @@
-"""CLI de ClinicGuard.
+"""CLI de Prognosia.
 
-    python -m clinicguard run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
-    python -m clinicguard run --hc corpus/clinic/hc-a.json --transcript corpus/clinic/consulta-a.txt
-    python -m clinicguard serve            # shell web local en http://127.0.0.1:8787
+    python -m prognosia run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
+    python -m prognosia run --hc corpus/clinic/hc-a.json --transcript corpus/clinic/consulta-a.txt
+    python -m prognosia serve            # shell web local en http://127.0.0.1:8787
 
 Pipeline: input → transcript → extracción SOAP (Qwen3-4B local) →
 reglas deterministas → JSON + HTML en out/.
@@ -20,7 +20,7 @@ from .render import render_html
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="clinicguard")
+    parser = argparse.ArgumentParser(prog="prognosia")
     sub = parser.add_subparsers(dest="command", required=True)
 
     run = sub.add_parser("run", help="Corre el pipeline sobre una consulta")
@@ -100,7 +100,7 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     server.FAST_MODE = bool(args.fast)
     mode = "FAST (transcript + sin LLM)" if args.fast else "completo (STT+LLM)"
     print(
-        f"ClinicGuard shell local → http://{args.host}:{args.port}  [{mode}]",
+        f"Prognosia shell local → http://{args.host}:{args.port}  [{mode}]",
         flush=True,
     )
     uvicorn.run(server.app, host=args.host, port=args.port, log_level="warning")

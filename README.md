@@ -1,4 +1,4 @@
-# ClinicGuard
+# Prognosia Health
 
 Asistente clínico **100% local** sobre QVAC (Aleph Hackathon 2026). Captura una
 consulta médica (voz o texto), extrae una nota SOAP estructurada con un LLM
@@ -27,10 +27,10 @@ fallara, ver los workarounds en `docs/prep-entorno.md`, sección 2.
 
 ```powershell
 # Caso A — near-miss: HC con asma severa + consulta que propone propranolol → BLOCKED
-python -m clinicguard run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
+python -m prognosia run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
 
 # Caso B — control negativo: HTA sin asma + plan inocuo → SAFE
-python -m clinicguard run --hc corpus/clinic/hc-b.json --transcript corpus/clinic/consulta-b.txt
+python -m prognosia run --hc corpus/clinic/hc-b.json --transcript corpus/clinic/consulta-b.txt
 ```
 
 Cada corrida imprime el transcript, la nota SOAP en JSON y el veredicto, y
@@ -40,12 +40,12 @@ puede correr el caso A sin audio: `--transcript corpus/clinic/consulta-a.txt`
 
 ## Shell web local (fase 2A) — sala de consulta
 
-Misma pipeline que el CLI. UI en `clinicguard/web/`: **una sola vista** de
+Misma pipeline que el CLI. UI en `prognosia/web/`: **una sola vista** de
 consultorio (agenda + HC + grabar + draft + aprobar). Sin cloud, sin login.
 
 ```powershell
-python -m clinicguard serve                 # http://127.0.0.1:8787
-python -m clinicguard serve --fast          # transcript + reglas ~1 s (ensayo)
+python -m prognosia serve                 # http://127.0.0.1:8787
+python -m prognosia serve --fast          # transcript + reglas ~1 s (ensayo)
 ```
 
 Flujo en la UI:
@@ -63,7 +63,7 @@ Flujo en la UI:
 API mínima (la usa la UI, sirve también para debug):
 `GET /api/cases` · `POST /api/run` con `{"case":"a"|"b","source":"audio"|"transcript"}`
 · `GET /api/run/{run_id}`. La decisión de safety sigue siendo la regla
-determinista del backend (`clinicguard/rules.py`); el frontend solo renderiza
+determinista del backend (`prognosia/rules.py`); el frontend solo renderiza
 el `RunResult`.
 
 Nota offline: las fuentes (Archivo / IBM Plex Mono) se piden a Google Fonts;
@@ -71,8 +71,8 @@ con WiFi off la UI cae a las fuentes del sistema sin romper nada.
 
 ### Fase 2B (pendiente) — Tauri
 
-Cuando 2A esté ensayada: envolver `clinicguard/web/` en una ventana Tauri
-única (sin browser chrome) que invoque `python -m clinicguard serve` del venv
+Cuando 2A esté ensayada: envolver `prognosia/web/` en una ventana Tauri
+única (sin browser chrome) que invoque `python -m prognosia serve` del venv
 local como sidecar. No cambia reglas ni schemas.
 
 ### Guión de 3 minutos (ensayado: 68 s de comandos)
@@ -90,7 +90,7 @@ local como sidecar. No cambia reglas ni schemas.
 
 audio/transcript → STT local (Whisper) → extracción SOAP (Qwen3-4B local, JSON
 validado con Pydantic, retry con feedback ×2, refusal sin inventar medicación)
-→ reglas deterministas (`clinicguard/rules.py`) → JSON + HTML mínimo.
+→ reglas deterministas (`prognosia/rules.py`) → JSON + HTML mínimo.
 
 La regla de safety evalúa el **transcript crudo** además de la nota extraída:
 un near-miss se bloquea aunque el LLM falle o distorsione la extracción.

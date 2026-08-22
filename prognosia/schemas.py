@@ -1,4 +1,4 @@
-"""Schemas de datos de ClinicGuard (Pydantic v2)."""
+"""Schemas de datos de Prognosia (Pydantic v2)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-# Kickoff prompt — ClinicGuard (fase funcional primero)
+# Kickoff prompt — Prognosia Health (fase funcional primero)
 
 Pegá este documento entero como primer mensaje a un agente / sesión de hackathon.
 **Prioridad:** 100% funcional y demoable. UI = fase 2 (ya existen mockups en `design/mockups/`; no los reimplementes ahora).
@@ -7,7 +7,7 @@ Pegá este documento entero como primer mensaje a un agente / sesión de hackath
 
 ## Contexto del producto
 
-**ClinicGuard** — asistente clínico 100% local (QVAC / Aleph Hackathon 2026).
+**Prognosia Health** — asistente clínico 100% local (QVAC / Aleph Hackathon 2026).
 
 Loop:
 1. Captura de consulta (voz → transcript)
@@ -26,7 +26,7 @@ Pitch demo (3 min): WiFi off → grabar / cargar audio → transcript visible �
 - SDK: `tetherto-qvac-sdk` en `.venv-qvac` (ver `docs/prep-entorno.md`)
 - Modelos pre-descargados en `~/.qvac/models/` (Qwen3-4B + OCR si hace falta)
 - Research tracks: `aleph-hackathon-2026-research/`
-- Spec viejo de conciliador (facturas): `docs/superpowers/specs/` — **NO es el producto actual**; el producto es ClinicGuard clínico
+- Spec viejo de conciliador (facturas): `docs/superpowers/specs/` — **NO es el producto actual**; el producto es Prognosia Health clínico
 - UI mockups (fase 2): `design/mockups/` + `design/handoff.md`
 
 Regla hackathon: código del producto **durante el evento**. Este kickoff asume que ya podés codear.
@@ -84,8 +84,8 @@ Crear `corpus/clinic/` (sintético, sin datos reales de pacientes):
 
 ```bash
 # forma objetivo (ajustar a la impl real)
-python -m clinicguard run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
-python -m clinicguard run --hc corpus/clinic/hc-a.json --transcript corpus/clinic/consulta-a.txt
+python -m prognosia run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
+python -m prognosia run --hc corpus/clinic/hc-a.json --transcript corpus/clinic/consulta-a.txt
 ```
 
 Salida mínima:
@@ -121,9 +121,9 @@ Implementar / portar `design/mockups/` encima del mismo pipeline. No cambiar reg
 ## Prompt corto para el agente (copiar debajo)
 
 ```text
-Sos el agente de implementación de ClinicGuard para el Aleph Hackathon 2026 (QVAC).
+Sos el agente de implementación de Prognosia Health para el Aleph Hackathon 2026 (QVAC).
 
-Leé este archivo completo: docs/kickoff-clinicguard-funcional.md
+Leé este archivo completo: docs/kickoff-prognosia-funcional.md
 Y el prep: docs/prep-entorno.md
 
 FASE ACTUAL: funcionalidad 100% demoable. NO prioritizar UI.

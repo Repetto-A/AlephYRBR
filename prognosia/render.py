@@ -65,9 +65,9 @@ def render_html(result: RunResult) -> str:
     )
 
     return f"""<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><title>ClinicGuard — {_esc(result.patient_id)}</title></head>
+<html lang="es"><head><meta charset="utf-8"><title>Prognosia — {_esc(result.patient_id)}</title></head>
 <body style="font-family:sans-serif;max-width:800px;margin:24px auto;padding:0 16px">
-  <h1>ClinicGuard — {_esc(result.patient_id)}</h1>
+  <h1>Prognosia — {_esc(result.patient_id)}</h1>
   {banner}
   {findings_html}
   {note_html}

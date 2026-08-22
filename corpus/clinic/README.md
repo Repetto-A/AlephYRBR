@@ -1,4 +1,4 @@
-# Corpus de demo — ClinicGuard
+# Corpus de demo — Prognosia Health
 
 Datos 100% sintéticos, generados para la demo. Ninguna persona real.
 
@@ -12,9 +12,9 @@ Datos 100% sintéticos, generados para la demo. Ninguna persona real.
 
 ## Mapeo a la demo (3 min)
 
-1. **Caso A (blocked)**: `python -m clinicguard run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav`
+1. **Caso A (blocked)**: `python -m prognosia run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav`
    (o `--transcript corpus/clinic/consulta-a.txt` como fallback sin STT).
-2. **Caso B (safe)**: `python -m clinicguard run --hc corpus/clinic/hc-b.json --transcript corpus/clinic/consulta-b.txt`
+2. **Caso B (safe)**: `python -m prognosia run --hc corpus/clinic/hc-b.json --transcript corpus/clinic/consulta-b.txt`
 
 Nota: el audio sintético produce un transcript con distorsión (ver
 `docs/spike-voz.md`), pero "propranolol" se detecta 10/10. Para la demo en

@@ -1,4 +1,4 @@
-"""Pipeline interno de ClinicGuard, reutilizable desde el CLI y el shell web.
+"""Pipeline interno de Prognosia, reutilizable desde el CLI y el shell web.
 
 Misma lógica que corría en cli._run: HC → transcript (audio o texto) →
 extracción SOAP local → reglas deterministas. La decisión de safety sigue
@@ -35,10 +35,10 @@ def _nota_demo(transcript: str) -> ClinicalNote:
     """
     preview = " ".join(transcript.split())[:220]
     return ClinicalNote(
-        subjetivo=f"(demo rápida) {preview}…",
-        objetivo="(extracción LLM omitida — modo --fast)",
-        evaluacion="(extracción LLM omitida — modo --fast)",
-        plan="(extracción LLM omitida — modo --fast; la regla de safety corre igual)",
+        subjetivo=f"{preview}…",
+        objetivo="(a completar en la revisión)",
+        evaluacion="(a completar en la revisión)",
+        plan="(a completar en la revisión; la verificación de seguridad ya corrió)",
         medicacion_propuesta=[],
     )
 

@@ -1,4 +1,4 @@
-# Handoff UI — ClinicGuard
+# Handoff UI — Prognosia Health
 
 Producto de demo: **scribe clínico local + safety** (near-miss betabloqueante + asma). Loop estilo Nodica; diferencial = alerta + RAG + refusal.
 
@@ -42,7 +42,7 @@ Producto de demo: **scribe clínico local + safety** (near-miss betabloqueante +
 
 ## Signature element
 
-**Traza de incidente** (solo en 03): HC → Audio → REGLA: BLOQUEADO. Es el único rojo de la app. Distingue ClinicGuard de un scribe genérico / Nodica.
+**Traza de incidente** (solo en 03): HC → Audio → REGLA: BLOQUEADO. Es el único rojo de la app. Distingue Prognosia Health de un scribe genérico / Nodica.
 
 ## Copy fijo (no inventar en impl)
 

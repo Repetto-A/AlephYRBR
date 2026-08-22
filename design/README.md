@@ -1,4 +1,4 @@
-# Design — ClinicGuard (prototipo visual)
+# Design — Prognosia Health (prototipo visual)
 
 **Esto no es el código del proyecto del hackathon.** Son mockups HTML estáticos para probar flujo y copy antes del kickoff.
 
