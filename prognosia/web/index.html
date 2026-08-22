@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="shell.css?v=3" />
   <link rel="icon" type="image/png" href="assets/prognosiaicon.png" />
 </head>
 <body>
@@ -155,6 +155,26 @@
             <div id="draft-banner"></div>
             <p class="tiny" id="draft-estado"></p>
             <article class="soap" id="soap"></article>
+            <section class="proposal" id="proposal-panel" hidden>
+              <header class="proposal__head">
+                <h2>Para registrar en la historia clínica</h2>
+                <span class="proposal__badge" id="proposal-gate"></span>
+              </header>
+              <p class="tiny" id="proposal-summary"></p>
+              <div class="proposal__grid">
+                <div>
+                  <h3 class="proposal__h">Cambios propuestos</h3>
+                  <dl class="proposal__soap" id="proposal-soap"></dl>
+                </div>
+                <div>
+                  <h3 class="proposal__h">Acciones a confirmar</h3>
+                  <ul class="proposal__list" id="proposal-actions"></ul>
+                </div>
+              </div>
+              <h3 class="proposal__h">Para tener en cuenta de visitas anteriores</h3>
+              <ul class="proposal__list" id="proposal-gaps"></ul>
+              <p class="tiny" id="proposal-note"></p>
+            </section>
             <details class="transcript-box">
               <summary class="tiny" id="transcript-summary">Lo que se dijo en la consulta</summary>
               <p class="muted" id="transcript-text"></p>
@@ -168,6 +188,7 @@
           <div class="phase-panel" data-phase-panel="approve" hidden>
             <h2 style="margin-top:0">Revisá antes de firmar</h2>
             <p class="muted">Nada llega a la historia clínica sin tu firma. Podés editar la nota.</p>
+            <div id="approve-proposal-strip" class="proposal-strip" hidden></div>
             <label class="tiny" for="nota">Nota</label>
             <textarea id="nota" class="note-doc" name="nota_clinica" rows="12" spellcheck="false" autocomplete="off"></textarea>
             <div class="actions">

@@ -115,7 +115,7 @@ def _med_actions(
                 action_id=f"med-{i+1}",
                 target="meds.active.add",
                 summary=(
-                    f"No agregar {nombre} (bloqueado por safety)"
+                    f"No agregar {nombre}: retenido por seguridad"
                     if blocked
                     else (
                         f"Confirmar {nombre} ya en HC"
@@ -171,8 +171,8 @@ def _gaps_for(hc: PatientRecord, result: RunResult) -> list[ClinicalGap]:
                     severity="warning",
                     title="Alerta de medicación no reflejada en HC",
                     detail=(
-                        "Near-miss betabloqueante detectado. Si el humano corrige el "
-                        "plan, registrar en HC la contraindicación revisada."
+                        "Se detectó un riesgo con betabloqueantes. Si corregís el "
+                        "plan, conviene dejar anotada la contraindicación en la HC."
                     ),
                     source="guideline_local",
                 )
@@ -214,7 +214,7 @@ def build_proposal(hc: PatientRecord, result: RunResult) -> HceProposal:
         WriteAction(
             action_id="soap-1",
             target="encounter.note.soap",
-            summary="Persistir nota SOAP de esta consulta",
+            summary="Guardar la nota de esta consulta",
             payload=soap,
             status="pending_human" if soap else "skipped",
         )
@@ -226,7 +226,7 @@ def build_proposal(hc: PatientRecord, result: RunResult) -> HceProposal:
             WriteAction(
                 action_id="safety-1",
                 target="encounter.alerts",
-                summary="Adjuntar hallazgo de safety a la evolución",
+                summary="Dejar registrada la alerta de seguridad en la evolución",
                 payload={
                     "status": result.status,
                     "findings": [f.model_dump() for f in result.findings],

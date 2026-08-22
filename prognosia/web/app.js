@@ -438,6 +438,7 @@ function renderDraft(run) {
   renderBanner(result, finding);
   renderSoap(result, finding);
   renderEvidence(result, finding);
+  renderProposal(run.proposal);
 
   $("#draft-estado").textContent = blocked
     ? "La nota quedó retenida: hay una indicación que puede ser peligrosa para este paciente."
@@ -468,7 +469,7 @@ function renderDraft(run) {
   }
 
   $("#btn-ir-aprobar")?.addEventListener("click", () => {
-    renderAprobar(result);
+    renderAprobar(result, run.proposal);
     setPhase("approve");
   });
   $("#btn-nueva")?.addEventListener("click", () => {
@@ -477,6 +478,58 @@ function renderDraft(run) {
 
   $("#draft-meta").textContent =
     "Generado en esta computadora · la información del paciente no salió de tu equipo.";
+}
+
+const ACTION_STATUS = {
+  pending_human: "Esperando tu firma",
+  blocked_by_safety: "Retenida por seguridad",
+  skipped: "Omitida",
+};
+
+const GAP_SEVERITY = { info: "Dato", warning: "Atención" };
+
+function renderProposal(proposal) {
+  const panel = $("#proposal-panel");
+  if (!proposal) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+
+  const gate = $("#proposal-gate");
+  const cerrado = proposal.safety_gate === "closed";
+  gate.textContent = cerrado ? "Registro retenido" : "Listo para registrar";
+  gate.dataset.gate = proposal.safety_gate;
+
+  const acciones = (proposal.write_actions || []).length;
+  $("#proposal-summary").textContent = acciones
+    ? `Prognosia preparó ${acciones === 1 ? "1 registro" : acciones + " registros"} para esta consulta. Nada se guarda sin tu confirmación.`
+    : "No hay registros pendientes para esta consulta.";
+  $("#proposal-note").textContent =
+    "Nada se escribe en la historia clínica sin tu confirmación.";
+
+  const soap = proposal.soap_delta || {};
+  $("#proposal-soap").innerHTML =
+    ["S", "O", "A", "P"]
+      .filter((k) => soap[k])
+      .map((k) => `<dt>${k}</dt><dd>${esc(truncate(soap[k], 140))}</dd>`)
+      .join("") || "<dd class='muted'>Sin cambios para registrar</dd>";
+
+  $("#proposal-actions").innerHTML =
+    (proposal.write_actions || [])
+      .map(
+        (a) =>
+          `<li><span class="tag" data-status="${esc(a.status)}">${esc(ACTION_STATUS[a.status] || a.status)}</span>${esc(a.summary)}</li>`
+      )
+      .join("") || "<li class='muted'>Sin acciones pendientes</li>";
+
+  $("#proposal-gaps").innerHTML =
+    (proposal.gaps || [])
+      .map(
+        (g) =>
+          `<li><span class="tag">${esc(GAP_SEVERITY[g.severity] || g.severity)}</span><strong>${esc(g.title)}</strong><br /><span class="tiny">${esc(g.detail)}</span></li>`
+      )
+      .join("") || "<li class='muted'>Nada pendiente de visitas anteriores</li>";
 }
 
 function renderBanner(result, finding) {
@@ -589,7 +642,7 @@ function renderEvidence(result, finding) {
   }
 }
 
-function renderAprobar(result) {
+function renderAprobar(result, proposal) {
   const n = result.note;
   const texto = n
     ? `S: ${n.subjetivo}\nO: ${n.objetivo}\nA: ${n.evaluacion}\nP: ${n.plan}`
@@ -601,6 +654,23 @@ function renderAprobar(result) {
     ? "Mientras la alerta de seguridad siga activa, la firma queda deshabilitada. Corregí el plan y generá la nota de nuevo."
     : "";
   $("#aprobar-status").textContent = "";
+
+  const strip = $("#approve-proposal-strip");
+  if (proposal) {
+    strip.hidden = false;
+    const pendientes = (proposal.write_actions || []).filter(
+      (a) => a.status === "pending_human"
+    ).length;
+    const retenidas = (proposal.write_actions || []).filter(
+      (a) => a.status === "blocked_by_safety"
+    ).length;
+    const partes = [];
+    if (pendientes) partes.push(`${pendientes} ${pendientes === 1 ? "acción espera" : "acciones esperan"} tu firma`);
+    if (retenidas) partes.push(`${retenidas} ${retenidas === 1 ? "quedó retenida" : "quedaron retenidas"} por seguridad`);
+    strip.innerHTML = `<strong>Al firmar se registra en la historia clínica.</strong> ${esc(partes.join(" · ") || "Sin acciones pendientes.")}`;
+  } else {
+    strip.hidden = true;
+  }
 }
 
 function firmarNota() {
