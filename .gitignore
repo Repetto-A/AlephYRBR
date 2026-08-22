@@ -25,3 +25,6 @@ Thumbs.db
 
 # Archivos comprimidos
 *.zip
+
+# Salidas de corridas
+out/
