@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>01 Preparar — ClinicGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="brand-mark" href="index.html" translate="no">ClinicGuard</a>
+        <span class="sub">preparar consulta</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <nav class="nav-flow" aria-label="Flujo de demo">
+      <a href="index.html">Hub</a>
+      <a href="01-preparar.html" aria-current="page">01 Preparar</a>
+      <a href="02-escuchando.html">02 Escuchar</a>
+      <a href="03-draft-alerta.html">03 Alerta</a>
+      <a href="04-draft-limpio.html">04 Limpio</a>
+      <a href="05-aprobar.html">05 Aprobar</a>
+    </nav>
+
+    <div class="grid-75">
+      <section class="panel panel--elevated">
+        <h2>Agenda de hoy</h2>
+        <p class="muted">Seleccioná la consulta. Revisá la HC antes de activar la escucha.</p>
+        <ul class="patient-list">
+          <li>
+            <div>
+              <strong>Paciente A · demo near-miss</strong>
+              <span class="tiny">Ambulatorio · taquicardia / temblor</span>
+            </div>
+            <a class="btn btn-primary" href="02-escuchando.html">Iniciar</a>
+          </li>
+          <li>
+            <div>
+              <strong>Paciente B · control negativo</strong>
+              <span class="tiny">Ambulatorio · control HTA</span>
+            </div>
+            <a class="btn btn-ghost" href="04-draft-limpio.html">Ver draft limpio</a>
+          </li>
+        </ul>
+      </section>
+
+      <aside class="panel panel--dim">
+        <h3>Historia clínica (sintética)</h3>
+        <dl class="hc-sheet">
+          <dt>Antecedentes</dt>
+          <dd>Asma severa (diagnóstico documentado)</dd>
+          <dt>Alergias</dt>
+          <dd>Ninguna conocida</dd>
+          <dt>Medicación habitual</dt>
+          <dd>Salmeterol / fluticasona inhalador</dd>
+          <dt>Motivo de consulta</dt>
+          <dd>Palpitaciones y temblor</dd>
+        </dl>
+        <p class="tiny" style="margin-top: 16px">Datos de demostración. No usar información de pacientes reales.</p>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

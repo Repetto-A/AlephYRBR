@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>03 Draft + alerta — ClinicGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="brand-mark" href="index.html" translate="no">ClinicGuard</a>
+        <span class="sub">draft bloqueado</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <nav class="nav-flow" aria-label="Flujo de demo">
+      <a href="index.html">Hub</a>
+      <a href="01-preparar.html">01 Preparar</a>
+      <a href="02-escuchando.html">02 Escuchar</a>
+      <a href="03-draft-alerta.html" aria-current="page">03 Alerta</a>
+      <a href="04-draft-limpio.html">04 Limpio</a>
+      <a href="05-aprobar.html">05 Aprobar</a>
+    </nav>
+
+    <main id="contenido">
+    <div class="trace" role="alert" aria-label="Traza de incidente de seguridad">
+      <div class="trace__node">
+        <span class="trace__label">HC</span>
+        <span class="trace__value">Asma severa</span>
+      </div>
+      <div class="trace__connector" aria-hidden="true"></div>
+      <div class="trace__node">
+        <span class="trace__label">Audio</span>
+        <span class="trace__value">“arranquemos propranolol”</span>
+      </div>
+      <div class="trace__connector" aria-hidden="true"></div>
+      <div class="trace__node trace__node--blocked">
+        <span class="trace__label">Regla</span>
+        <span class="trace__value">BLOQUEADO</span>
+      </div>
+    </div>
+    <p class="trace__detail">
+      <strong>Plan propuesto choca con la historia clínica.</strong>
+      Betabloqueante no selectivo (propranolol) + asma severa documentada. No iniciar sin revisión.
+    </p>
+
+    <div class="grid-75">
+      <section class="panel panel--elevated">
+        <h2>Borrador de nota</h2>
+        <p class="tiny">Estado: <code>draft.blocked</code> · el modelo no completa la indicación</p>
+        <article class="soap">
+          <section>
+            <div class="label">S — Subjetivo</div>
+            <p>Paciente refiere palpitaciones y temblor de recientes semanas. Niega dolor precordial.</p>
+          </section>
+          <section>
+            <div class="label">O — Objetivo</div>
+            <p><span class="vital">FC 104</span> · <span class="vital">PA 128/78</span> · <span class="vital">Sat 98%</span> aire ambiente. Auscultación pulmonar sin sibilancias hoy.</p>
+          </section>
+          <section>
+            <div class="label">A — Evaluación</div>
+            <p>Taquicardia / temblor a estudiar. Antecedente relevante: asma severa en HC.</p>
+          </section>
+          <section>
+            <div class="label">P — Plan</div>
+            <p>Solicitar laboratorio y ECG. Educación sobre desencadenantes.</p>
+            <div class="blocked">
+              Campo bloqueado — evidencia de riesgo; el modelo no completa la indicación.<br />
+              <span class="tiny" style="color: inherit">Propuesta detectada en audio: “iniciar propranolol” → rechazada por regla + HC.</span>
+            </div>
+          </section>
+        </article>
+        <div class="actions">
+          <a class="btn btn-primary" href="05-aprobar.html">Corregir plan y continuar</a>
+          <button class="btn btn-ghost" type="button" disabled>Aprobar nota</button>
+        </div>
+        <p class="tiny" style="margin-top: 12px">Con bloqueos abiertos, Aprobar queda deshabilitado. El camino es corregir el plan.</p>
+      </section>
+
+      <aside class="panel panel--evidence evidence">
+        <h3>Evidencia (RAG local)</h3>
+        <p class="muted">Guía empaquetada offline — no cloud.</p>
+        <blockquote>
+          “Los betabloqueantes no selectivos pueden precipitar broncoespasmo en pacientes con asma y generalmente deben evitarse…”
+        </blockquote>
+        <p class="tiny">Fuente mock: Guía clínica asma / cardiovascular (PDF local indexado). Cita ilustrativa para la demo.</p>
+        <dl class="hc-box" style="margin-top: 14px">
+          <dt>Señal desde HC</dt>
+          <dd>Asma severa</dd>
+          <dt>Señal desde consulta</dt>
+          <dd>“arranquemos propranolol”</dd>
+          <dt>Motor</dt>
+          <dd>Regla determinista + snippet RAG</dd>
+        </dl>
+      </aside>
+    </div>
+    </main>
+  </div>
+</body>
+</html>

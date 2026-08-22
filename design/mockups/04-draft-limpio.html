@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>04 Draft limpio — ClinicGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="brand-mark" href="index.html" translate="no">ClinicGuard</a>
+        <span class="sub">draft seguro</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <nav class="nav-flow" aria-label="Flujo de demo">
+      <a href="index.html">Hub</a>
+      <a href="01-preparar.html">01 Preparar</a>
+      <a href="02-escuchando.html">02 Escuchar</a>
+      <a href="03-draft-alerta.html">03 Alerta</a>
+      <a href="04-draft-limpio.html" aria-current="page">04 Limpio</a>
+      <a href="05-aprobar.html">05 Aprobar</a>
+    </nav>
+
+    <div class="safe-banner" role="status">
+      <span class="safe-banner__mark" aria-hidden="true">OK</span>
+      <div>
+        <strong>Sin choques con la HC</strong>
+        <p>El plan no choca con contraindicaciones conocidas de la HC sintética.</p>
+      </div>
+    </div>
+
+    <div class="grid-75">
+      <section class="panel panel--elevated">
+        <h2>Borrador de nota</h2>
+        <p class="tiny">Estado: <code>draft.safe</code> · control negativo de la demo</p>
+        <article class="soap">
+          <section>
+            <div class="label">S — Subjetivo</div>
+            <p>Control de hipertensión. Refiere buena adherencia. Sin mareos.</p>
+          </section>
+          <section>
+            <div class="label">O — Objetivo</div>
+            <p><span class="vital">PA 132/84</span> · <span class="vital">FC 72</span>. Examen sin particularidades.</p>
+          </section>
+          <section>
+            <div class="label">A — Evaluación</div>
+            <p>HTA en seguimiento. Estabilidad clínica.</p>
+          </section>
+          <section>
+            <div class="label">P — Plan</div>
+            <p>Continuar enalapril. Control en 3 meses. Reforzar medidas no farmacológicas.</p>
+          </section>
+        </article>
+        <div class="actions">
+          <a class="btn btn-primary" href="05-aprobar.html">Revisar y aprobar</a>
+        </div>
+      </section>
+
+      <aside class="panel panel--dim">
+        <h3>Panel de evidencia</h3>
+        <p class="muted">Sin disparadores de regla. El RAG no se fuerza si no hay riesgo.</p>
+        <dl class="hc-box" style="margin-top: 14px">
+          <dt>Alertas</dt>
+          <dd><span class="vital">0</span></dd>
+          <dt>Campos bloqueados</dt>
+          <dd><span class="vital">0</span></dd>
+        </dl>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Entornos virtuales
+.venv-qvac/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# QVAC (cache local del proyecto)
+.qvac/
+
+# Modelos (viven en cache global, no en el repo)
+*.gguf
+
+# Secretos
+.env
+!.env.example
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Archivos comprimidos
+*.zip

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClinicGuard — prototipo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="sub">prototipo visual · pre-hackathon</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <main id="contenido">
+    <h1 class="brand-hero" translate="no">ClinicGuard</h1>
+    <p class="tagline">La nota se escribe sola. El riesgo no pasa.</p>
+
+    <p class="muted" style="margin-bottom: 24px; max-width: 48ch">
+      Recorré el protocolo de demo. El paso <strong>03</strong> es el hero (near-miss). El <strong>04</strong> es el control negativo.
+    </p>
+
+    <ol class="protocol">
+      <li>
+        <a href="01-preparar.html">
+          <span class="protocol__num">01</span>
+          <span>
+            <span class="protocol__title">Preparar consulta</span>
+            <span class="protocol__desc">HC sintética con asma severa. Elegís paciente y revisás datos.</span>
+          </span>
+          <span class="protocol__go">Abrir</span>
+        </a>
+      </li>
+      <li>
+        <a href="02-escuchando.html">
+          <span class="protocol__num">02</span>
+          <span>
+            <span class="protocol__title">Escuchando</span>
+            <span class="protocol__desc">Consulta en curso. El profesional mira al paciente, no al teclado.</span>
+          </span>
+          <span class="protocol__go">Abrir</span>
+        </a>
+      </li>
+      <li>
+        <a href="03-draft-alerta.html">
+          <span class="protocol__num">03</span>
+          <span>
+            <span class="protocol__title">Draft + alerta</span>
+            <span class="protocol__desc">Hero: propranolol vs asma. Traza de incidente + evidencia RAG.</span>
+          </span>
+          <span class="protocol__go">Hero</span>
+        </a>
+      </li>
+      <li>
+        <a href="04-draft-limpio.html">
+          <span class="protocol__num">04</span>
+          <span>
+            <span class="protocol__title">Draft limpio</span>
+            <span class="protocol__desc">Mismo UI, plan inocuo. El sistema no grita de más.</span>
+          </span>
+          <span class="protocol__go">Abrir</span>
+        </a>
+      </li>
+      <li>
+        <a href="05-aprobar.html">
+          <span class="protocol__num">05</span>
+          <span>
+            <span class="protocol__title">Aprobar</span>
+            <span class="protocol__desc">Nada entra a la HC sin revisión humana (loop Nodica).</span>
+          </span>
+          <span class="protocol__go">Abrir</span>
+        </a>
+      </li>
+    </ol>
+    </main>
+  </div>
+</body>
+</html>

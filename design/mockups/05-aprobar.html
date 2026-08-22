@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>05 Aprobar — ClinicGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="brand-mark" href="index.html" translate="no">ClinicGuard</a>
+        <span class="sub">aprobación humana</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <nav class="nav-flow" aria-label="Flujo de demo">
+      <a href="index.html">Hub</a>
+      <a href="01-preparar.html">01 Preparar</a>
+      <a href="02-escuchando.html">02 Escuchar</a>
+      <a href="03-draft-alerta.html">03 Alerta</a>
+      <a href="04-draft-limpio.html">04 Limpio</a>
+      <a href="05-aprobar.html" aria-current="page">05 Aprobar</a>
+    </nav>
+
+    <div class="grid-75">
+      <section class="panel panel--elevated">
+        <h2>Revisá antes de firmar</h2>
+        <p class="muted">Nada llega a la historia clínica sin tu aprobación. Editá si hace falta.</p>
+        <label class="tiny" for="nota">Nota editable (mock)</label>
+        <textarea id="nota" class="note-doc" name="nota_clinica" rows="12" spellcheck="false" autocomplete="off">S: Palpitaciones y temblor.
+O: FC 104 · PA 128/78.
+A: Taquicardia a estudiar. Asma severa en antecedentes.
+P: Laboratorio + ECG. NO se inicia betabloqueante; evaluar alternativas tras revisión.</textarea>
+        <div class="actions">
+          <button class="btn btn-primary" type="button">Aprobar nota</button>
+          <a class="btn btn-ghost" href="03-draft-alerta.html">Volver al draft con alerta</a>
+        </div>
+        <p class="tiny" style="margin-top: 12px">En el producto real: si quedan bloqueos sin resolver, el botón Aprobar queda deshabilitado.</p>
+
+        <div class="state-pair">
+          <div class="panel panel--dim" style="padding: 14px">
+            <div class="state-label">Estado mock — con bloqueos</div>
+            <button class="btn btn-primary" type="button" disabled>Aprobar nota</button>
+          </div>
+          <div class="panel panel--dim" style="padding: 14px">
+            <div class="state-label">Estado mock — sin bloqueos</div>
+            <button class="btn btn-primary" type="button">Aprobar nota</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h3>Checklist FDE / demo</h3>
+        <ul class="muted" style="padding-left: 18px; line-height: 1.7; margin: 8px 0 0">
+          <li>Humano en el loop (como Nodica)</li>
+          <li>Near-miss visible: HC → audio → alerta</li>
+          <li>Sin claim de “diagnosticamos”</li>
+          <li>Sello local en header · WiFi off en video</li>
+        </ul>
+        <p style="margin-top: 20px"><a href="index.html">← Volver al hub</a></p>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

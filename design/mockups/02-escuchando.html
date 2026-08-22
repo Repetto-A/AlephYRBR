@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>02 Escuchando — ClinicGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="brand-mark" href="index.html" translate="no">ClinicGuard</a>
+        <span class="sub">consulta en curso</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <nav class="nav-flow" aria-label="Flujo de demo">
+      <a href="index.html">Hub</a>
+      <a href="01-preparar.html">01 Preparar</a>
+      <a href="02-escuchando.html" aria-current="page">02 Escuchar</a>
+      <a href="03-draft-alerta.html">03 Alerta</a>
+      <a href="04-draft-limpio.html">04 Limpio</a>
+      <a href="05-aprobar.html">05 Aprobar</a>
+    </nav>
+
+    <section class="panel panel--elevated listen">
+      <p class="tiny" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0">Paciente A</p>
+      <h1 class="patient-name">Escuchando la consulta</h1>
+      <p class="muted" style="max-width: 36ch; margin: 0 auto">Hablá con el paciente como siempre. ClinicGuard arma el borrador al terminar.</p>
+      <div class="wave" role="img" aria-label="Audio en captura">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <p class="transcript-live">
+        Transcripción en vivo (mock): “…vamos a arrancar <em>propranolol</em>…”
+      </p>
+      <div class="actions" style="justify-content: center">
+        <a class="btn btn-danger" href="03-draft-alerta.html">Detener y generar nota</a>
+        <a class="btn btn-ghost" href="01-preparar.html">Cancelar</a>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
