@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "mode": "local_lookup",
+  "note": "Snippets sintéticos empaquetados offline para la demo. No son guías clínicas oficiales ni consejo médico.",
+  "guides": [
+    {
+      "guide_id": "asma-bb-no-selectivo-v1",
+      "rule_ids": ["asma-severa-betabloqueante-v1"],
+      "title": "Asma y betabloqueantes no selectivos",
+      "citation": "Los betabloqueantes no selectivos pueden precipitar broncoespasmo en pacientes con asma y generalmente deben evitarse. Ante taquicardia o temblor en asma severa, preferir alternativas y revisar la HC antes de indicar.",
+      "source": "corpus/clinic/evidence.json · guía local mock (asma / cardiovascular)",
+      "keywords": ["asma", "propranolol", "betabloqueante", "broncoespasmo"]
+    },
+    {
+      "guide_id": "alergia-documentada-vs-plan-v1",
+      "rule_ids": ["alergia-hc-vs-plan-v1"],
+      "title": "Alergia documentada vs plan de la consulta",
+      "citation": "Si la historia clínica documenta una alergia, no iniciar ni continuar un fármaco relacionado sin revisión humana explícita. Cruzar el plan y el transcript contra la lista de alergias antes de persistir la indicación.",
+      "source": "corpus/clinic/evidence.json · guía local mock (seguridad de medicación)",
+      "keywords": ["alergia", "aspirina", "aas", "contraindicacion"]
+    }
+  ]
+}

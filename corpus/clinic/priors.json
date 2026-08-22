@@ -1,0 +1,26 @@
+{
+  "HC-A-001": [
+    {
+      "fecha": "2026-03-12",
+      "titulo": "Control asma",
+      "hallazgo": "Peak flow no registrado en la última visita."
+    },
+    {
+      "fecha": "2026-01-28",
+      "titulo": "Exacerbación leve",
+      "hallazgo": "Corticoide oral 5 días; sin spirometría de control documentada."
+    }
+  ],
+  "HC-B-001": [
+    {
+      "fecha": "2026-02-15",
+      "titulo": "Control HTA",
+      "hallazgo": "PA en consultorio 128/82; falta registro de PA domiciliaria."
+    },
+    {
+      "fecha": "2025-11-10",
+      "titulo": "Ajuste enalapril",
+      "hallazgo": "Creatinina y K+ de control pendientes de cargar."
+    }
+  ]
+}

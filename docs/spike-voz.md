@@ -52,8 +52,13 @@ Script reproducible: `scripts/spike_voz.py`
 
 ## Decisión para el pipeline
 
-1. `--audio` usa `transcribe_stream_session` + Whisper base + VAD Silero.
-2. `--transcript` (texto plano) es el fallback de primera clase y el default
-   recomendado para la demo si no hay micrófono/voz real.
-3. El matching de la regla de safety es tolerante a variantes de
-   transcripción (`propr?an[oa]lol`), decisión tomada a raíz de este spike.
+1. `--audio` usa `transcribe_stream_session` + Whisper base + VAD Silero
+   **con prompt médico** (`corpus/clinic/lexicon.json` → `whisper_prompt`).
+2. Tras STT (y también sobre `--transcript`), corre
+   `clinicguard/lexicon.py`: frases clínicas, canónicos de drogas y
+   vitales en palabras → dígitos (`130/85`, `FC 96`). El resultado
+   corregido es el que ve el LLM y las reglas; el crudo queda en
+   `transcript_raw` si hubo cambios.
+3. `--transcript` (texto plano) sigue siendo fallback de primera clase.
+4. El matching de safety es tolerante a variantes
+   (`propr?an[oa]lol`) + léxico fuzzy.

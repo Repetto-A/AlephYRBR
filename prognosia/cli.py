@@ -3,9 +3,10 @@
     python -m prognosia run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
     python -m prognosia run --hc corpus/clinic/hc-a.json --transcript corpus/clinic/consulta-a.txt
     python -m prognosia serve            # shell web local en http://127.0.0.1:8787
+    python -m prognosia rag-smoke        # smoke BM25 sobre guías locales
 
 Pipeline: input → transcript → extracción SOAP (Qwen3-4B local) →
-reglas deterministas → JSON + HTML en out/.
+reglas deterministas → RAG local (si findings) → JSON + HTML en out/.
 """
 
 from __future__ import annotations
@@ -44,6 +45,16 @@ def _parser() -> argparse.ArgumentParser:
         "--fast",
         action="store_true",
         help="Demo rápida: fuerza transcript + saltea LLM (~1 s). Sin Whisper ni Qwen",
+    )
+
+    rag = sub.add_parser(
+        "rag-smoke",
+        help="Smoke del RAG local (BM25) — query por defecto: propranolol asma severa",
+    )
+    rag.add_argument(
+        "--query",
+        default="propranolol asma severa",
+        help="Query de retrieval",
     )
     return parser
 
@@ -86,10 +97,34 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print(f"  - [{f.severidad}] {f.motivo}")
         print(f"    HC: {f.evidencia_hc}")
         print(f"    Consulta: «{f.evidencia_consulta}»")
+        if f.guia is not None:
+            print(f"    Guía: {f.guia.title} [{f.guia.mode}] score={f.guia.score}")
     print("=" * 60)
     print(f"\nSalida: {json_path} | {html_path}")
 
     return 0 if result.status in ("safe", "blocked") else 1
+
+
+def _cmd_rag_smoke(args: argparse.Namespace) -> int:
+    from .rag import smoke_retrieve
+
+    hits = smoke_retrieve(args.query)
+    print(f"query: {args.query!r}")
+    print(f"hits: {len(hits)}")
+    for h in hits:
+        print(f"  [{h.score}] {h.title} · § {h.section}")
+        print(f"    {h.source}")
+        cite = h.citation
+        print(f"    «{cite[:160]}…»" if len(cite) > 160 else f"    «{cite}»")
+    if not hits:
+        print("FAIL: sin hits (revisá corpus/clinic/guidelines/)", file=sys.stderr)
+        return 1
+    top = hits[0]
+    ok = "asma" in (top.doc_id or "").lower() or "asma" in top.title.lower()
+    if not ok:
+        print("WARN: top hit no parece la guía de asma", file=sys.stderr)
+    print("OK" if ok else "PARTIAL")
+    return 0 if hits else 1
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:
@@ -111,6 +146,8 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "serve":
         return _cmd_serve(args)
+    if args.command == "rag-smoke":
+        return _cmd_rag_smoke(args)
     return _cmd_run(args)
 
 

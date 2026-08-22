@@ -19,5 +19,24 @@
     { "droga": "enalapril", "dosis": "10 mg", "frecuencia": "1 vez por día", "via": "oral" }
   ],
   "alergias": [],
+  "estudios": [
+    {
+      "estudio_id": "est-b-lipid-2025",
+      "tipo": "lab",
+      "detalle": "Perfil lipídico",
+      "estado": "con_resultado",
+      "pedido_en": "2025-10-20",
+      "resultado_en": "2025-10-22",
+      "resultado": "Colesterol total 212 · LDL 138 · HDL 42 · TG 150 (mg/dL)."
+    },
+    {
+      "estudio_id": "est-b-crea-k-pending",
+      "tipo": "lab",
+      "detalle": "Creatinina y potasio de control (post ajuste enalapril)",
+      "estado": "pendiente_resultado",
+      "pedido_en": "2025-11-10",
+      "resultado": null
+    }
+  ],
   "nota": "Paciente sintético generado para demo. No corresponde a ninguna persona real."
 }

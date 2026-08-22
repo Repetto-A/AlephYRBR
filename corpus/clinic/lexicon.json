@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "note": "Léxico clínico local para corregir distorsiones típicas de STT (Whisper) en español. Demo / hackathon — no es un diccionario farmacológico completo.",
+  "whisper_prompt": "Consulta médica en español. Signos vitales, auscultación, tensión arterial. Medicamentos: propranolol, enalapril, salbutamol, budesonide, formoterol, carvedilol, labetalol, aspirina.",
+  "phrase_fixes": [
+    {"from": "tencin arterial", "to": "tensión arterial"},
+    {"from": "tension arterial", "to": "tensión arterial"},
+    {"from": "presion arterial", "to": "presión arterial"},
+    {"from": "frecuencia cardiaca", "to": "frecuencia cardíaca"},
+    {"from": "oscultation", "to": "auscultación"},
+    {"from": "oscultacion", "to": "auscultación"},
+    {"from": "auscultation", "to": "auscultación"},
+    {"from": "auscultacion", "to": "auscultación"},
+    {"from": "impresion diagnostica", "to": "impresión diagnóstica"},
+    {"from": "sindrome ansioso", "to": "síndrome ansioso"},
+    {"from": "hiperactividad adrenergica", "to": "hiperactividad adrenérgica"},
+    {"from": "cada dose horas", "to": "cada doce horas"},
+    {"from": "cada 12 oras", "to": "cada 12 horas"},
+    {"from": "hipertension arterial", "to": "hipertensión arterial"},
+    {"from": "dieta hiposodica", "to": "dieta hiposódica"}
+  ],
+  "drugs": [
+    {
+      "canonical": "propranolol",
+      "aliases": ["propanolol", "propranalol", "propranodol", "propranol", "propranolol"]
+    },
+    {
+      "canonical": "enalapril",
+      "aliases": ["enalapril", "enalapryl", "enalipril", "enalaprilo"]
+    },
+    {
+      "canonical": "salbutamol",
+      "aliases": ["salbutamol", "salbutamol", "albuterol"]
+    },
+    {
+      "canonical": "carvedilol",
+      "aliases": ["carvedilol", "carvedilolo"]
+    },
+    {
+      "canonical": "labetalol",
+      "aliases": ["labetalol", "labetalolo"]
+    },
+    {
+      "canonical": "budesonide",
+      "aliases": ["budesonide", "budesonida"]
+    },
+    {
+      "canonical": "formoterol",
+      "aliases": ["formoterol", "formoterol"]
+    },
+    {
+      "canonical": "aspirina",
+      "aliases": ["aspirina", "aspirin", "aas"]
+    }
+  ]
+}

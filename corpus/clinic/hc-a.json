@@ -20,5 +20,24 @@
     { "droga": "salbutamol", "dosis": "100 mcg", "frecuencia": "a demanda", "via": "inhalatoria" }
   ],
   "alergias": ["ácido acetilsalicílico (broncoespasmo)"],
+  "estudios": [
+    {
+      "estudio_id": "est-a-spirometry-2024",
+      "tipo": "estudio",
+      "detalle": "Espirometría con prueba broncodilatadora",
+      "estado": "con_resultado",
+      "pedido_en": "2024-11-02",
+      "resultado_en": "2024-11-05",
+      "resultado": "VEF1 58% del teórico; respuesta broncodilatadora positiva. Compatible con asma no controlada."
+    },
+    {
+      "estudio_id": "est-a-peakflow-pending",
+      "tipo": "estudio",
+      "detalle": "Peak flow domiciliario (serie de 2 semanas)",
+      "estado": "pendiente_resultado",
+      "pedido_en": "2026-03-12",
+      "resultado": null
+    }
+  ],
   "nota": "Paciente sintética generada para demo. No corresponde a ninguna persona real."
 }

@@ -113,21 +113,21 @@
               <span></span><span></span><span></span><span></span>
               <span></span><span></span><span></span><span></span>
             </div>
-            <p class="tiny" style="text-align:center; text-transform:uppercase; letter-spacing:0.08em; font-weight:500">Escuchando…</p>
+            <p class="tiny" id="rec-kicker" style="text-align:center; text-transform:uppercase; letter-spacing:0.08em; font-weight:500">Escuchando…</p>
             <p class="live-transcript" id="live-transcript" aria-live="polite"></p>
             <div class="actions" style="justify-content:center; margin-top: 16px">
               <button class="btn btn-danger" type="button" id="btn-stop-rec">Terminar y armar la nota</button>
               <button class="btn btn-ghost" type="button" id="btn-cancel-rec">Cancelar</button>
             </div>
-            <p class="tiny" style="text-align:center; margin-top: 10px">
+            <p class="tiny" id="rec-hint" style="text-align:center; margin-top: 10px">
               Atendé como siempre: mirá al paciente, no al teclado. La nota se arma al terminar.
             </p>
           </div>
 
           <!-- consulta escrita -->
           <div class="phase-panel" data-phase-panel="write" hidden>
-            <h2 style="margin-top:0">¿Qué se habló en la consulta?</h2>
-            <p class="muted">Escribí o pegá lo conversado con el paciente. Prognosia arma el borrador de la nota y revisa que el plan sea seguro.</p>
+            <h2 id="write-heading" style="margin-top:0">¿Qué se habló en la consulta?</h2>
+            <p class="muted" id="write-lead">Escribí o pegá lo conversado con el paciente. Prognosia arma el borrador de la nota y revisa que el plan sea seguro.</p>
             <textarea id="consulta-texto" class="note-doc" rows="9" spellcheck="false" placeholder="Ej.: Paciente refiere dolor de cabeza de tres días… Examen: PA 120/80… Plan: voy a indicar…"></textarea>
             <div class="actions" style="margin-top: 14px">
               <button class="btn btn-primary" type="button" id="btn-run-text">Armar la nota</button>
@@ -202,8 +202,8 @@
 
         <aside class="room-evidence">
           <section class="panel" id="evidence-panel">
-            <h3>Seguridad</h3>
-            <p class="muted">Si el plan choca con la historia clínica, acá vas a ver por qué.</p>
+            <h3>Evidencia (RAG local)</h3>
+            <p class="muted">Si hay near-miss, acá aparece la guía local indexada (offline) — no PubMed.</p>
           </section>
         </aside>
       </main>

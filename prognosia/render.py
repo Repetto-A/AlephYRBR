@@ -21,30 +21,96 @@ def render_html(result: RunResult) -> str:
 
     findings_html = ""
     for f in result.findings:
+        guia_html = ""
+        if f.guia is not None:
+            score_bit = (
+                f" · score {f.guia.score}" if f.guia.score is not None else ""
+            )
+            section_bit = (
+                f" · § {_esc(f.guia.section)}" if f.guia.section else ""
+            )
+            guia_html = (
+                f"<p><strong>Guía local ({_esc(f.guia.mode)}):</strong> "
+                f"{_esc(f.guia.title)}{section_bit}{score_bit}</p>"
+                f"<blockquote style='border-left:3px solid #12507b;padding:8px 12px;"
+                f"background:#e4eef5'>«{_esc(f.guia.citation)}»</blockquote>"
+                f"<p style='font-size:0.85em;color:#555'>{_esc(f.guia.source)} "
+                f"(<code>{_esc(f.guia.guide_id)}</code>)</p>"
+            )
         findings_html += (
             f"<div style='border:2px solid #c0392b;padding:12px;margin:8px 0'>"
             f"<p><strong>Regla:</strong> {_esc(f.rule_id)} ({_esc(f.severidad)})</p>"
             f"<p><strong>Motivo:</strong> {_esc(f.motivo)}</p>"
             f"<p><strong>Evidencia HC:</strong> {_esc(f.evidencia_hc)}</p>"
             f"<p><strong>Evidencia consulta:</strong> «{_esc(f.evidencia_consulta)}»</p>"
+            f"{guia_html}"
             f"</div>"
         )
 
     note = result.note
     if note is not None:
-        meds_rows = "".join(
-            f"<li>{_esc(m.nombre)} {_esc(m.dosis)} {_esc(m.frecuencia)} {_esc(m.via)}"
-            + (f" — <em>«{_esc(m.evidencia)}»</em>" if m.evidencia else "")
-            + "</li>"
-            for m in note.medicacion_propuesta
-        )
+        cambios = note.cambios_medicacion or []
+        if cambios:
+            meds_rows = "".join(
+                f"<li>[{_esc(c.accion)}] {_esc(c.nombre)} {_esc(c.dosis)} "
+                f"{_esc(c.frecuencia)} {_esc(c.via)}"
+                + (f" — <em>«{_esc(c.evidencia)}»</em>" if c.evidencia else "")
+                + "</li>"
+                for c in cambios
+            )
+        else:
+            meds_rows = "".join(
+                f"<li>{_esc(m.nombre)} {_esc(m.dosis)} {_esc(m.frecuencia)} {_esc(m.via)}"
+                + (f" — <em>«{_esc(m.evidencia)}»</em>" if m.evidencia else "")
+                + "</li>"
+                for m in note.medicacion_propuesta
+            )
+        vitals_html = ""
+        if note.vitales and any(
+            [
+                note.vitales.fc,
+                note.vitales.pa,
+                note.vitales.sat,
+                note.vitales.temperatura,
+                note.vitales.peso_kg,
+            ]
+        ):
+            v = note.vitales
+            vitals_html = (
+                "<h3>Vitales</h3><ul>"
+                + (f"<li>FC: {v.fc}</li>" if v.fc is not None else "")
+                + (f"<li>PA: {_esc(v.pa)}</li>" if v.pa else "")
+                + (f"<li>Sat: {v.sat}%</li>" if v.sat is not None else "")
+                + (
+                    f"<li>Temp: {v.temperatura}</li>"
+                    if v.temperatura is not None
+                    else ""
+                )
+                + (f"<li>Peso: {v.peso_kg} kg</li>" if v.peso_kg is not None else "")
+                + "</ul>"
+            )
+        ordenes_html = ""
+        if note.ordenes:
+            ordenes_html = (
+                "<h3>Órdenes</h3><ul>"
+                + "".join(
+                    f"<li>[{_esc(o.tipo)}] {_esc(o.detalle)}</li>" for o in note.ordenes
+                )
+                + "</ul>"
+            )
+        follow_html = ""
+        if note.seguimiento and note.seguimiento.plazo:
+            follow_html = f"<h3>Seguimiento</h3><p>{_esc(note.seguimiento.plazo)}</p>"
         note_html = f"""
   <h2>Nota SOAP</h2>
   <h3>S — Subjetivo</h3><p>{_esc(note.subjetivo)}</p>
   <h3>O — Objetivo</h3><p>{_esc(note.objetivo)}</p>
   <h3>A — Evaluación</h3><p>{_esc(note.evaluacion)}</p>
   <h3>P — Plan</h3><p>{_esc(note.plan)}</p>
-  <h3>Medicación propuesta</h3><ul>{meds_rows or "<li>(ninguna)</li>"}</ul>"""
+  {vitals_html}
+  <h3>Cambios de medicación</h3><ul>{meds_rows or "<li>(ninguno)</li>"}</ul>
+  {ordenes_html}
+  {follow_html}"""
     elif result.note_status == "refused":
         note_html = (
             "<h2>Nota SOAP</h2><p><em>Extracción rechazada: "

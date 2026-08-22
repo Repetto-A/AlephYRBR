@@ -15,8 +15,9 @@ from pathlib import Path
 from tetherto.qvac_sdk import load_model, transcribe_stream_session, unload_model
 from tetherto.qvac_sdk.models import VAD_SILERO_5_1_2, WHISPER_BASE_Q8_0
 
-STT_MODEL_NAME = "WHISPER_BASE_Q8_0 (multilingüe) + VAD_SILERO_5_1_2"
+from .lexicon import whisper_prompt
 
+STT_MODEL_NAME = "WHISPER_BASE_Q8_0 (multilingüe) + VAD_SILERO_5_1_2"
 _TARGET_RATE = 16000
 
 
@@ -37,8 +38,9 @@ def _wav_a_pcm16k(audio: Path) -> bytes:
 
 
 async def transcribir(transport, audio: Path) -> tuple[str, float]:
-    """Transcribe un WAV. Devuelve (texto, latencia_segundos)."""
+    """Transcribe un WAV. Devuelve (texto crudo Whisper, latencia_segundos)."""
     pcm = _wav_a_pcm16k(audio)
+    prompt = whisper_prompt() or None
     t0 = time.perf_counter()
     model_id = await load_model(
         transport,
@@ -47,7 +49,9 @@ async def transcribir(transport, audio: Path) -> tuple[str, float]:
     )
     try:
         parts: list[str] = []
-        async with transcribe_stream_session(transport, model_id=model_id) as session:
+        async with transcribe_stream_session(
+            transport, model_id=model_id, prompt=prompt
+        ) as session:
             chunk_size = _TARGET_RATE * 2  # 1 segundo de audio
             for i in range(0, len(pcm), chunk_size):
                 session.write(pcm[i : i + chunk_size])

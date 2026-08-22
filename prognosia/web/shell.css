@@ -206,6 +206,45 @@
   margin-top: 2px;
 }
 
+.hc-estudios {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.hc-estudios li {
+  padding: 6px 0;
+  border-top: 1px solid var(--line, #c5d0c9);
+  font-size: var(--fs-sm, 0.9rem);
+  line-height: 1.35;
+}
+
+.hc-estudios li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.hc-estudios .tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border: 1px solid var(--line, #c5d0c9);
+  margin-right: 4px;
+}
+
+.hc-estudios .tag[data-status="pedido"],
+.hc-estudios .tag[data-status="pendiente"] {
+  border-color: var(--text-tertiary, #5a6863);
+  color: var(--text-tertiary, #5a6863);
+}
+
+.hc-estudios .tag[data-status="resultado"] {
+  border-color: var(--ok, #1e7a4f);
+  color: var(--ok, #1e7a4f);
+}
+
 .progress-steps {
   list-style: none;
   margin: 12px auto 8px;

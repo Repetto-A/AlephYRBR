@@ -44,8 +44,9 @@ const PHASE_COPY = {
 /* Los pasos internos llegan con vocabulario técnico: acá se traducen
    a lenguaje de consultorio antes de mostrarse. */
 const STEP_TRANSLATIONS = [
-  [/hc cargada/i, "Leyendo la historia clínica"],
+  [/hc cargada|leyendo la historia/i, "Leyendo la historia clínica"],
   [/transcri|escuchando|audio|stt|whisper/i, "Repasando lo que se dijo en la consulta"],
+  [/correcci[oó]n del m[eé]dico|revalida/i, "Tomando tu corrección del plan"],
   [/extra|nota soap|qwen|llm/i, "Armando el borrador de la nota"],
   [/safety|regla|verific/i, "Revisando que el plan sea seguro"],
   [/listo|done|ok/i, "Casi listo"],
@@ -64,6 +65,9 @@ const state = {
   liveIdx: 0,
   run: null,
   signedToday: {},
+  correcting: false,
+  previousRun: null,
+  previousRunId: null,
 };
 
 function esc(text) {
@@ -251,6 +255,32 @@ function renderHc(c) {
     .map((m) => `${m.droga}${m.dosis ? ` ${m.dosis}` : ""}`)
     .join(" · ");
   const alergias = (hc.alergias || []).length ? hc.alergias.join(" · ") : "Ninguna conocida";
+  const estudios = hc.estudios || [];
+  const pendientes = estudios.filter((e) =>
+    ["pedido", "pendiente_resultado"].includes(e.estado)
+  );
+  const conResultado = estudios.filter((e) => e.estado === "con_resultado");
+  const estudiosHtml = estudios.length
+    ? `<ul class="hc-estudios">${estudios
+        .map((e) => {
+          const tag =
+            e.estado === "con_resultado"
+              ? "resultado"
+              : e.estado === "pendiente_resultado"
+                ? "pendiente"
+                : e.estado === "pedido"
+                  ? "pedido"
+                  : e.estado;
+          const extra =
+            e.estado === "con_resultado" && e.resultado
+              ? `<span class="tiny">${esc(truncate(e.resultado, 90))}</span>`
+              : e.pedido_en
+                ? `<span class="tiny">pedido ${esc(e.pedido_en)}</span>`
+                : "";
+          return `<li><span class="tag" data-status="${esc(tag)}">${esc(tag)}</span> <strong>${esc(e.tipo)}</strong> — ${esc(e.detalle)}${extra ? `<br />${extra}` : ""}</li>`;
+        })
+        .join("")}</ul>`
+    : `<dd class="muted">Sin estudios cargados</dd>`;
 
   box.innerHTML = `
     <p class="hc-live-title">${esc(hc.nombre)}${hc.edad ? `, ${hc.edad} años` : ""}</p>
@@ -261,6 +291,8 @@ function renderHc(c) {
       <dd>${esc(alergias)}</dd>
       <dt>Medicación habitual</dt>
       <dd>${esc(medicacion || "—")}</dd>
+      <dt>Estudios <span class="tiny">(${pendientes.length} abiertos · ${conResultado.length} con resultado)</span></dt>
+      <dd>${estudiosHtml}</dd>
     </dl>`;
 }
 
@@ -283,8 +315,8 @@ function renderSessions(caseId) {
 
 function resetEvidence() {
   $("#evidence-panel").innerHTML = `
-    <h3>Seguridad</h3>
-    <p class="muted">Si el plan choca con la historia clínica, acá vas a ver por qué.</p>`;
+    <h3>Evidencia (RAG local)</h3>
+    <p class="muted">Si hay near-miss, acá aparece la guía local indexada (offline) — no PubMed.</p>`;
 }
 
 function selectPatient(caseId) {
@@ -293,6 +325,9 @@ function selectPatient(caseId) {
   state.selectedId = caseId;
   state.run = null;
   state.runId = null;
+  state.correcting = false;
+  state.previousRun = null;
+  state.previousRunId = null;
   renderAgenda();
   const c = selectedCase();
   renderHc(c);
@@ -313,9 +348,34 @@ function hasSampleTranscript(c) {
   return c && (c.id === "a" || c.id === "b");
 }
 
+function setRecordingChrome(correcting) {
+  $("#rec-kicker").textContent = correcting ? "Corrección del plan" : "Escuchando…";
+  $("#btn-stop-rec").textContent = correcting
+    ? "Terminar y revalidar"
+    : "Terminar y armar la nota";
+  $("#rec-hint").textContent = correcting
+    ? "Decí el plan nuevo (por ejemplo: no indico propranolol, paso a diltiazem). Al terminar se vuelve a revisar la seguridad."
+    : "Atendé como siempre: mirá al paciente, no al teclado. La nota se arma al terminar.";
+}
+
+function setWriteChrome(correcting) {
+  $("#write-heading").textContent = correcting
+    ? "¿Cuál es el plan corregido?"
+    : "¿Qué se habló en la consulta?";
+  $("#write-lead").textContent = correcting
+    ? "La indicación anterior chocó con la historia clínica. Escribí el plan nuevo. Prognosia vuelve a validar y, si está bien, vas a poder firmar."
+    : "Escribí o pegá lo conversado con el paciente. Prognosia arma el borrador de la nota y revisa que el plan sea seguro.";
+  $("#consulta-texto").placeholder = correcting
+    ? "Ej.: No indico propranolol. Paso a diltiazem 60 mg cada 12 horas y control en dos semanas."
+    : "Ej.: Paciente refiere dolor de cabeza de tres días… Examen: PA 120/80… Plan: voy a indicar…";
+  $("#btn-run-text").textContent = correcting ? "Revalidar el plan" : "Armar la nota";
+}
+
 function startRecording() {
   const c = selectedCase();
   if (!c) return;
+  state.correcting = false;
+  setRecordingChrome(false);
   state.pendingSource =
     !state.config.fast && c.tiene_audio ? "audio" : "transcript";
   setPhase("recording");
@@ -341,8 +401,180 @@ function startRecording() {
 
 function cancelRecording() {
   stopLive();
-  setPhase("idle");
+  stopMicCapture();
   $("#live-transcript").textContent = "";
+  if (state.correcting) {
+    setRecordingChrome(false);
+    setPhase("draft");
+    return;
+  }
+  setPhase("idle");
+}
+
+/* ——— Mic local → WAV PCM 16 kHz (corrección del plan) ——— */
+
+const micState = {
+  stream: null,
+  ctx: null,
+  processor: null,
+  sourceNode: null,
+  mute: null,
+  chunks: [],
+  sampleRate: 48000,
+  startedAt: 0,
+  tickTimer: null,
+};
+
+function mergeFloatChunks(chunks) {
+  let n = 0;
+  for (const c of chunks) n += c.length;
+  const out = new Float32Array(n);
+  let off = 0;
+  for (const c of chunks) {
+    out.set(c, off);
+    off += c.length;
+  }
+  return out;
+}
+
+function downsampleTo16k(input, fromRate) {
+  if (fromRate === 16000) return input;
+  const ratio = fromRate / 16000;
+  const outLen = Math.floor(input.length / ratio);
+  const out = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    out[i] = input[Math.floor(i * ratio)] || 0;
+  }
+  return out;
+}
+
+function encodeWavPcm16(samples, sampleRate) {
+  const n = samples.length;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const view = new DataView(buf);
+  const writeStr = (off, s) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i));
+  };
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + n * 2, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, "data");
+  view.setUint32(40, n * 2, true);
+  let off = 44;
+  for (let i = 0; i < n; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    off += 2;
+  }
+  return buf;
+}
+
+function bufToB64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+}
+
+async function startMicCapture() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error("Este navegador no permite usar el micrófono.");
+  }
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true },
+  });
+  const ctx = new AudioContext();
+  const sourceNode = ctx.createMediaStreamSource(stream);
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+  const processor = ctx.createScriptProcessor(4096, 1, 1);
+  const chunks = [];
+  processor.onaudioprocess = (ev) => {
+    chunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+  };
+  sourceNode.connect(processor);
+  processor.connect(mute);
+  mute.connect(ctx.destination);
+  micState.stream = stream;
+  micState.ctx = ctx;
+  micState.processor = processor;
+  micState.sourceNode = sourceNode;
+  micState.mute = mute;
+  micState.chunks = chunks;
+  micState.sampleRate = ctx.sampleRate;
+  micState.startedAt = Date.now();
+  clearInterval(micState.tickTimer);
+  micState.tickTimer = setInterval(() => {
+    const sec = ((Date.now() - micState.startedAt) / 1000).toFixed(0);
+    $("#live-transcript").textContent = `Grabando corrección… ${sec} s`;
+  }, 400);
+}
+
+function stopMicCapture() {
+  clearInterval(micState.tickTimer);
+  micState.tickTimer = null;
+  try {
+    micState.processor?.disconnect();
+    micState.sourceNode?.disconnect();
+    micState.mute?.disconnect();
+  } catch {
+    /* ya desconectado */
+  }
+  micState.stream?.getTracks().forEach((t) => t.stop());
+  if (micState.ctx && micState.ctx.state !== "closed") {
+    micState.ctx.close();
+  }
+  const chunks = micState.chunks.slice();
+  const rate = micState.sampleRate || 48000;
+  micState.stream = null;
+  micState.ctx = null;
+  micState.processor = null;
+  micState.sourceNode = null;
+  micState.mute = null;
+  micState.chunks = [];
+  if (!chunks.length) return null;
+  const merged = mergeFloatChunks(chunks);
+  const pcm16k = downsampleTo16k(merged, rate);
+  return encodeWavPcm16(pcm16k, 16000);
+}
+
+async function startCorrectionRecording() {
+  if (state.config.fast) {
+    openCorrectionWrite();
+    return;
+  }
+  state.correcting = true;
+  setRecordingChrome(true);
+  setPhase("recording");
+  $("#live-transcript").textContent = "Pidiendo permiso de micrófono…";
+  try {
+    await startMicCapture();
+  } catch (err) {
+    $("#live-transcript").textContent = "";
+    setRecordingChrome(false);
+    setPhase("draft");
+    alert(`No se pudo abrir el mic: ${err.message || err}`);
+  }
+}
+
+function openCorrectionWrite() {
+  state.correcting = true;
+  setWriteChrome(true);
+  $("#write-error").hidden = true;
+  $("#consulta-texto").value = "";
+  setPhase("write");
+  $("#consulta-texto").focus();
 }
 
 async function startRun(source, texto) {
@@ -350,6 +582,7 @@ async function startRun(source, texto) {
   if (!c) return;
   stopLive();
   state.pendingSource = source;
+  state.correcting = false;
   state.run = null;
   $("#progress-steps").innerHTML = "";
   $("#run-error").hidden = true;
@@ -371,13 +604,54 @@ async function startRun(source, texto) {
   }
 }
 
+async function startCorrection({ texto, audioWavB64 }) {
+  if (!state.runId) {
+    showRunError("No hay una nota retenida para corregir.");
+    return;
+  }
+  stopLive();
+  state.previousRun = state.run;
+  state.previousRunId = state.runId;
+  $("#progress-steps").innerHTML = "";
+  $("#run-error").hidden = true;
+  setPhase("processing");
+
+  const body = {};
+  if (texto) body.texto = texto;
+  if (audioWavB64) body.audio_wav_b64 = audioWavB64;
+
+  try {
+    const res = await fetch(`/api/run/${state.runId}/correct`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+    state.runId = (await res.json()).run_id;
+    state.pollTimer = setInterval(poll, 900);
+  } catch (err) {
+    showRunError(String(err.message || err));
+    if (state.previousRunId) {
+      state.runId = state.previousRunId;
+      state.run = state.previousRun;
+    }
+  }
+}
+
 function runFromText() {
   const texto = $("#consulta-texto").value.trim();
   const errorEl = $("#write-error");
   errorEl.hidden = true;
-  if (texto.length < 15) {
-    errorEl.textContent = "Contanos un poco más de la consulta para poder armar la nota.";
+  const min = state.correcting ? 8 : 15;
+  if (texto.length < min) {
+    errorEl.textContent = state.correcting
+      ? "Escribí el plan nuevo para poder revalidarlo."
+      : "Contanos un poco más de la consulta para poder armar la nota.";
     errorEl.hidden = false;
+    return;
+  }
+  if (state.correcting) {
+    startCorrection({ texto });
     return;
   }
   startRun("texto", texto);
@@ -391,11 +665,21 @@ async function poll() {
     renderSteps(run.steps || []);
     if (run.state === "done") {
       stopPolling();
+      state.correcting = false;
+      state.previousRun = null;
+      state.previousRunId = null;
+      setWriteChrome(false);
+      setRecordingChrome(false);
       renderDraft(run);
       setPhase("draft");
     } else if (run.state === "error") {
       stopPolling();
       showRunError(run.error);
+      if (state.previousRun) {
+        state.runId = state.previousRunId;
+        state.run = state.previousRun;
+        state.correcting = false;
+      }
     }
   } catch {
     /* reintento */
@@ -446,16 +730,18 @@ function renderDraft(run) {
       ? "No se pudo armar la nota completa. Revisala manualmente antes de seguir."
       : "El borrador está listo para tu revisión.";
 
-  $("#transcript-text").textContent = result.transcript;
+  $("#transcript-text").textContent = result.transcript_correccion
+    ? `${result.transcript}\n\n— Corrección del plan —\n${result.transcript_correccion}`
+    : result.transcript;
 
   const actions = $("#draft-actions");
   if (blocked) {
     actions.innerHTML = `
-      <button class="btn btn-primary" type="button" id="btn-ir-aprobar">Corregir el plan</button>
-      <button class="btn btn-ghost" type="button" disabled>Firmar nota</button>
+      <button class="btn btn-primary" type="button" id="btn-correct-audio">Corregir el plan hablando</button>
+      <button class="btn btn-ghost" type="button" id="btn-correct-write">Corregir por escrito</button>
       <button class="btn btn-ghost" type="button" id="btn-nueva">Nueva consulta</button>`;
     $("#draft-hint").textContent =
-      "Mientras la alerta siga activa, la firma queda deshabilitada. El camino es corregir el plan.";
+      "La firma queda deshabilitada mientras la alerta siga activa. Corregí el plan (audio o texto) para volver a validar y poder firmar.";
   } else if (escalate) {
     actions.innerHTML = `
       <button class="btn btn-ghost" type="button" id="btn-nueva">Volver a la consulta</button>`;
@@ -471,6 +757,12 @@ function renderDraft(run) {
   $("#btn-ir-aprobar")?.addEventListener("click", () => {
     renderAprobar(result, run.proposal);
     setPhase("approve");
+  });
+  $("#btn-correct-audio")?.addEventListener("click", () => {
+    startCorrectionRecording();
+  });
+  $("#btn-correct-write")?.addEventListener("click", () => {
+    openCorrectionWrite();
   });
   $("#btn-nueva")?.addEventListener("click", () => {
     if (state.selectedId) selectPatient(state.selectedId);
@@ -555,15 +847,18 @@ function renderBanner(result, finding) {
       </div>
       <p class="trace__detail">
         <strong>El plan propuesto contradice la historia clínica.</strong>
-        ${esc(droga.charAt(0).toUpperCase() + droga.slice(1))} está contraindicado con los antecedentes de este paciente. No iniciar sin revisión.
+        ${esc(droga.charAt(0).toUpperCase() + droga.slice(1))} está contraindicado con los antecedentes de este paciente. No iniciar sin revisión. Corregí el plan hablando o por escrito para revalidar.
       </p>`;
   } else if (result.status === "safe") {
+    const revalidado = result.transcript_correccion
+      ? " El plan se revalidó después de tu corrección."
+      : "";
     box.innerHTML = `
       <div class="safe-banner" role="status">
         <span class="safe-banner__mark" aria-hidden="true">OK</span>
         <div>
           <strong>Sin alertas de seguridad</strong>
-          <p>El plan es compatible con la historia clínica del paciente.</p>
+          <p>El plan es compatible con la historia clínica del paciente.${revalidado}</p>
         </div>
       </div>`;
   } else {
@@ -617,23 +912,55 @@ function renderSoap(result, finding) {
 function renderEvidence(result, finding) {
   const aside = $("#evidence-panel");
   if (result.status === "blocked" && finding) {
+    const g = finding.guia;
+    const snippets =
+      Array.isArray(finding.rag_snippets) && finding.rag_snippets.length
+        ? finding.rag_snippets
+        : g
+          ? [g]
+          : [];
+    const primary = snippets[0] || g;
+    const modeLabel =
+      primary?.mode === "local_rag"
+        ? "RAG local (BM25 · guías markdown)"
+        : primary?.mode === "local_lookup"
+          ? "Lookup estático (evidence.json)"
+          : "Sin hit de guía";
+    const guideBlock = primary
+      ? `<div style="margin: 10px 0 14px">
+          <p class="tiny" style="margin:0 0 4px"><strong>Guía local</strong> · ${esc(modeLabel)}</p>
+          <p class="tiny" style="margin:0 0 8px"><strong>${esc(primary.title)}</strong>${
+            primary.section ? ` · § ${esc(primary.section)}` : ""
+          }</p>
+          <blockquote>“${esc(primary.citation || finding.motivo)}”</blockquote>
+          <p class="tiny">${esc(primary.source || "")}${
+            primary.score != null ? ` · score ${esc(String(primary.score))}` : ""
+          }</p>
+        </div>`
+      : `<blockquote>${esc(finding.motivo)}</blockquote>`;
     aside.innerHTML = `
-      <h3>¿Por qué se retuvo?</h3>
-      <blockquote>${esc(finding.motivo)}</blockquote>
+      <h3>Evidencia (RAG local)</h3>
+      <p class="muted">Guía indexada offline — no PubMed / no cloud. Solo refuerza la explicación; la decisión es la regla.</p>
+      ${guideBlock}
       <dl class="hc-box" style="margin-top: 14px">
         <dt>En la historia clínica</dt>
         <dd>${esc(hcCorta(finding.evidencia_hc))}</dd>
         <dt>En la consulta</dt>
         <dd>“${esc(truncate(finding.evidencia_consulta, 110))}”</dd>
-      </dl>
-      <p class="tiny" style="margin-top: 12px">La verificación se hace en tu computadora, comparando el plan con la historia clínica.</p>`;
+        <dt>Motor</dt>
+        <dd>Regla <span class="vital">${esc(finding.rule_id)}</span>${
+          primary ? ` + <code>${esc(primary.guide_id || primary.doc_id || "")}</code>` : ""
+        }</dd>
+      </dl>`;
   } else if (result.status === "safe") {
     aside.innerHTML = `
       <h3>Seguridad</h3>
-      <p class="muted">No se encontraron choques entre el plan y la historia clínica.</p>
+      <p class="muted">Sin findings. El RAG local no se fuerza en consultas safe.</p>
       <dl class="hc-box" style="margin-top: 14px">
         <dt>Alertas</dt>
         <dd><span class="vital">0</span></dd>
+        <dt>Corpus local</dt>
+        <dd class="tiny">guidelines/ indexadas; retrieval solo si hay blocked</dd>
       </dl>`;
   } else {
     aside.innerHTML = `
@@ -648,10 +975,13 @@ function renderAprobar(result, proposal) {
     ? `S: ${n.subjetivo}\nO: ${n.objetivo}\nA: ${n.evaluacion}\nP: ${n.plan}`
     : `Nota no disponible: ${result.note_refusal_motivo || "no se pudo armar la nota"}`;
   $("#nota").value = texto;
-  const blocked = result.status !== "safe";
+  const gateClosed = proposal && proposal.safety_gate === "closed";
+  const blocked = result.status !== "safe" || !!gateClosed;
   $("#btn-aprobar").disabled = blocked;
   $("#approve-hint").textContent = blocked
-    ? "Mientras la alerta de seguridad siga activa, la firma queda deshabilitada. Corregí el plan y generá la nota de nuevo."
+    ? gateClosed
+      ? "Safety gate cerrado: la firma queda deshabilitada hasta corregir el plan."
+      : "Mientras la alerta de seguridad siga activa, la firma queda deshabilitada. Corregí el plan y generá la nota de nuevo."
     : "";
   $("#aprobar-status").textContent = "";
 
@@ -667,35 +997,66 @@ function renderAprobar(result, proposal) {
     const partes = [];
     if (pendientes) partes.push(`${pendientes} ${pendientes === 1 ? "acción espera" : "acciones esperan"} tu firma`);
     if (retenidas) partes.push(`${retenidas} ${retenidas === 1 ? "quedó retenida" : "quedaron retenidas"} por seguridad`);
+    if (gateClosed) partes.push("gate cerrado");
     strip.innerHTML = `<strong>Al firmar se registra en la historia clínica.</strong> ${esc(partes.join(" · ") || "Sin acciones pendientes.")}`;
   } else {
     strip.hidden = true;
   }
 }
 
-function firmarNota() {
+async function firmarNota() {
   const c = selectedCase();
   if (!c) return;
-  const hoy = new Date().toLocaleDateString("es-AR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  if (!PAST_SESSIONS[c.id]) PAST_SESSIONS[c.id] = [];
-  PAST_SESSIONS[c.id].unshift({
-    fecha: hoy,
-    titulo: c.descripcion || "Consulta",
-    tag: "firmada",
-  });
-  state.signedToday[c.id] = true;
-  renderSessions(c.id);
-  $("#aprobar-status").textContent =
-    `Nota de ${nombreDe(c)} firmada y guardada en su historia clínica.`;
-  $("#btn-aprobar").disabled = true;
-  setTimeout(() => {
-    setView("home");
-    homeStatus(`Nota de ${nombreDe(c)} firmada. ¿Quién sigue?`);
-  }, 1200);
+  const status = $("#aprobar-status");
+  const btn = $("#btn-aprobar");
+  if (!state.runId) {
+    status.textContent = "No hay corrida activa para firmar.";
+    return;
+  }
+  btn.disabled = true;
+  status.textContent = "Firmando y guardando en la historia clínica local…";
+  try {
+    const res = await fetch("/api/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        run_id: state.runId,
+        edited_soap: $("#nota")?.value || null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || `No se pudo firmar (${res.status})`;
+      btn.disabled = false;
+      return;
+    }
+    const hoy = new Date().toLocaleDateString("es-AR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    if (!PAST_SESSIONS[c.id]) PAST_SESSIONS[c.id] = [];
+    PAST_SESSIONS[c.id].unshift({
+      fecha: hoy,
+      titulo: c.descripcion || "Consulta",
+      tag: "firmada",
+    });
+    state.signedToday[c.id] = true;
+    const casesRes = await fetch("/api/cases");
+    state.cases = await casesRes.json();
+    renderAgenda();
+    renderSessions(c.id);
+    const n = (data.applied_action_ids || []).length;
+    status.textContent =
+      `Nota de ${nombreDe(c)} firmada · encuentro ${data.encounter_id} · ${n} acción(es) en HC local.`;
+    setTimeout(() => {
+      setView("home");
+      homeStatus(`Nota de ${nombreDe(c)} firmada. ¿Quién sigue?`);
+    }, 1200);
+  } catch (err) {
+    status.textContent = `Fallo al firmar: ${err}`;
+    btn.disabled = false;
+  }
 }
 
 async function loadConfig() {
@@ -770,19 +1131,48 @@ $("#patient-form").addEventListener("submit", submitPatient);
 
 $("#btn-start-rec").addEventListener("click", startRecording);
 $("#btn-write").addEventListener("click", () => {
+  state.correcting = false;
+  setWriteChrome(false);
   $("#write-error").hidden = true;
   setPhase("write");
   $("#consulta-texto").focus();
 });
 $("#btn-run-text").addEventListener("click", runFromText);
-$("#btn-cancel-write").addEventListener("click", () => setPhase("idle"));
-$("#btn-stop-rec").addEventListener("click", () => {
+$("#btn-cancel-write").addEventListener("click", () => {
+  setWriteChrome(false);
+  if (state.correcting) {
+    state.correcting = false;
+    setPhase("draft");
+    return;
+  }
+  setPhase("idle");
+});
+$("#btn-stop-rec").addEventListener("click", async () => {
   stopLive();
+  if (state.correcting) {
+    const wav = stopMicCapture();
+    if (!wav) {
+      showRunError("No se capturó audio. Reintentá la corrección.");
+      setPhase("draft");
+      return;
+    }
+    await startCorrection({ audioWavB64: bufToB64(wav) });
+    return;
+  }
   startRun(state.pendingSource);
 });
 $("#btn-cancel-rec").addEventListener("click", cancelRecording);
 $("#btn-cancel-run").addEventListener("click", () => {
   stopPolling();
+  if (state.correcting || state.previousRun) {
+    if (state.previousRunId) {
+      state.runId = state.previousRunId;
+      state.run = state.previousRun;
+    }
+    state.correcting = false;
+    setPhase("draft");
+    return;
+  }
   setPhase("idle");
 });
 $("#btn-volver-draft").addEventListener("click", () => setPhase("draft"));

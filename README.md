@@ -76,16 +76,18 @@ Flujo en la UI:
 3. **Procesando** — progreso real (STT + extracción; 20–45 s, o ~1 s en `--fast`).
 4. **Draft** — caso A: traza HC → Audio → **BLOQUEADO** + plan blocked;
    caso B: check verde. Panel **Propuesta HCE**: SOAP delta, write actions
-   (`pending_human` / `blocked_by_safety`) y gaps vs visitas previas.
-5. **Aprobar** — nota editable; disabled si hay bloqueos. Gate de safety
-   visible; nada se escribe solo.
+   (`pending_human` / `blocked_by_safety`, incl. add/change/stop + vitales +
+   órdenes + follow-up) y gaps (prior + transcript).
+5. **Aprobar** — `POST /api/approve` aplica writes a store local
+   (`out/encounters/`), actualiza HC overlay; disabled si hay bloqueos.
 
 API mínima (la usa la UI, sirve también para debug):
 `GET /api/config` · `GET /api/cases` · `POST /api/patients` ·
 `POST /api/run` con `{"case": id, "source": "audio"|"transcript"}` o
-`{"case": id, "texto": "..."}` (consulta escrita) · `GET /api/run/{run_id}`
-(incluye `result` + `proposal`). La decisión de safety sigue siendo la regla
-determinista del backend (`prognosia/rules.py`); el frontend solo renderiza.
+`{"case": id, "texto": "..."}` (consulta escrita) · `GET /api/run/{run_id}` ·
+`POST /api/approve` · `GET /api/encounters/{patient_id}`.
+La decisión de safety sigue siendo la regla determinista del backend
+(`prognosia/rules.py`); el frontend solo renderiza.
 
 ### Guión offline (jueces QVAC, ~3 min)
 
@@ -115,13 +117,17 @@ local como sidecar. No cambia reglas ni schemas.
 
 ## Pipeline
 
-audio/transcript → STT local (Whisper) → extracción SOAP (Qwen3-4B local, JSON
-validado con Pydantic, retry con feedback ×2, refusal sin inventar medicación)
-→ reglas deterministas (`prognosia/rules.py`) → propuesta HCE
-(`prognosia/propose.py`) → JSON + HTML / UI.
+audio/transcript → STT local (Whisper) → extracción SOAP + entidades
+(Qwen3-4B local: vitales, MedChange, órdenes, seguimiento; JSON validado,
+retry ×2, refusal sin inventar medicación)
+→ reglas deterministas (`prognosia/rules.py`: asma+BB y alergia HC vs plan)
+→ RAG local (`prognosia/rag.py` BM25 sobre `corpus/clinic/guidelines/`; solo si hay findings)
+→ propuesta HCE (`prognosia/propose.py`) → approve local (`store.py` → `out/encounters/`)
+→ JSON + HTML / UI.
 
 La regla de safety evalúa el **transcript crudo** además de la nota extraída:
 un near-miss se bloquea aunque el LLM falle o distorsione la extracción.
+El RAG **no** decide blocked/safe: solo adjunta cita de guía local al finding.
 
 ## Modelos y latencias medidas
 
@@ -132,6 +138,7 @@ Hardware: AMD Radeon 780M (Vulkan 1.4), Windows 11. Medido el 2026-08-22.
 | STT | `WHISPER_BASE_Q8_0` (82 MB) + `VAD_SILERO_5_1_2` | 3.8 s (audio de 56 s, ~15× tiempo real, incluye carga) |
 | Extracción SOAP | `QWEN3_4B_INST_Q4_K_M` (2.33 GB, ctx 8192, temp 0) | 19–39 s según largo del transcript (incluye carga a RAM) |
 | Reglas de safety | determinista (regex + normalización, sin LLM) | < 1 ms |
+| RAG local (guías) | BM25 sobre `corpus/clinic/guidelines/*.md` | < 5 ms |
 | Propuesta HCE | determinista (`propose.py`, sin LLM) | < 1 ms |
 
 Corrida completa: caso A con audio ~46 s, caso B con transcript ~22 s.
@@ -148,6 +155,11 @@ Corpus sintético y mapeo a la demo: `corpus/clinic/README.md`.
 - [x] Control negativo: hc-b + consulta-b → `safe`
 - [x] 100% local (QVAC; sin llamadas cloud de inference)
 - [x] Shell web sala de consulta + propuesta HCE (SOAP delta / writes / gaps)
+- [x] Approve local: `POST /api/approve` + HC overlay en `out/encounters/`
+- [x] Extracción enriquecida: vitales, MedChange, órdenes, seguimiento
+- [x] Safety alergia HC vs plan (además de asma+betabloqueante)
+- [x] Evidencia RAG local (BM25 sobre `guidelines/*.md`; fallback `evidence.json`)
+- [x] Léxico clínico post-STT (`lexicon.json` + prompt Whisper + vitales en palabras)
 - [x] Stack QVAC visible en UI (`/api/config`) y README
 - [x] Reproducible (este README: setup, comandos, corpus, latencias)
 - [x] Ensayo < 3 min (68 s de comandos + narrativa; UI `--fast` ~1 s/caso)
