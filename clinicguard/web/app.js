@@ -302,6 +302,7 @@ function renderDraft(run) {
   renderBanner(result, finding, fuente);
   renderSoap(result, finding);
   renderEvidence(result, finding);
+  renderProposal(run.proposal);
 
   $("#draft-estado").innerHTML = blocked
     ? "Estado: <code>draft.blocked</code> · el modelo no completa la indicación"
@@ -334,7 +335,7 @@ function renderDraft(run) {
   }
 
   $("#btn-ir-aprobar")?.addEventListener("click", () => {
-    renderAprobar(result);
+    renderAprobar(result, run.proposal);
     setPhase("approve");
   });
   $("#btn-nueva")?.addEventListener("click", () => {
@@ -348,8 +349,46 @@ function renderDraft(run) {
     meta.push(
       `Extracción ${result.modelo_extraccion} ${result.latencia_extraccion_s?.toFixed(1)} s`
     );
-  meta.push("Inferencia 100% local");
+  meta.push("QVAC local · agente HCE pending_human");
   $("#draft-meta").textContent = meta.join(" · ");
+}
+
+function renderProposal(proposal) {
+  const panel = $("#proposal-panel");
+  if (!proposal) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  const gate = $("#proposal-gate");
+  gate.textContent =
+    proposal.safety_gate === "closed" ? "safety gate closed" : "safety gate open";
+  gate.dataset.gate = proposal.safety_gate;
+  $("#proposal-summary").textContent = proposal.encounter_summary || "";
+  $("#proposal-note").textContent = proposal.note || "";
+
+  const soap = proposal.soap_delta || {};
+  $("#proposal-soap").innerHTML = ["S", "O", "A", "P"]
+    .filter((k) => soap[k])
+    .map(
+      (k) =>
+        `<dt>${k}</dt><dd>${esc(truncate(soap[k], 140))}</dd>`
+    )
+    .join("") || "<dd class='muted'>Sin delta SOAP</dd>";
+
+  $("#proposal-actions").innerHTML = (proposal.write_actions || [])
+    .map(
+      (a) =>
+        `<li><span class="tag" data-status="${esc(a.status)}">${esc(a.status)}</span>${esc(a.summary)} <span class="tiny">→ ${esc(a.target)}</span></li>`
+    )
+    .join("") || "<li class='muted'>Sin acciones</li>";
+
+  $("#proposal-gaps").innerHTML = (proposal.gaps || [])
+    .map(
+      (g) =>
+        `<li><span class="tag">${esc(g.severity)}</span><strong>${esc(g.title)}</strong><br /><span class="tiny">${esc(g.detail)}</span></li>`
+    )
+    .join("") || "<li class='muted'>Sin gaps</li>";
 }
 
 function renderBanner(result, finding, fuente) {
@@ -467,7 +506,7 @@ function renderEvidence(result, finding) {
   }
 }
 
-function renderAprobar(result) {
+function renderAprobar(result, proposal) {
   const n = result.note;
   const texto = n
     ? `S: ${n.subjetivo}\nO: ${n.objetivo}\nA: ${n.evaluacion}\nP: ${n.plan}`
@@ -475,6 +514,26 @@ function renderAprobar(result) {
   $("#nota").value = texto;
   $("#btn-aprobar").disabled = result.status !== "safe";
   $("#aprobar-status").textContent = "";
+
+  const strip = $("#approve-proposal-strip");
+  if (proposal) {
+    strip.hidden = false;
+    const pending = (proposal.write_actions || []).filter(
+      (a) => a.status === "pending_human"
+    ).length;
+    const blockedActs = (proposal.write_actions || []).filter(
+      (a) => a.status === "blocked_by_safety"
+    ).length;
+    const gaps = (proposal.gaps || []).length;
+    strip.innerHTML = `
+      <strong>Agente HCE local (QVAC)</strong> —
+      gate <code>${esc(proposal.safety_gate)}</code> ·
+      ${pending} write(s) pending_human ·
+      ${blockedActs} blocked_by_safety ·
+      ${gaps} gap(s). Nada se escribe sin firmar.`;
+  } else {
+    strip.hidden = true;
+  }
 }
 
 async function loadConfig() {
@@ -485,10 +544,19 @@ async function loadConfig() {
     state.config = { fast: false };
   }
   const banner = $("#fast-banner");
-  banner.hidden = !state.config.fast;
+  const stack = state.config.stack;
+  const stackLine = stack
+    ? ` Stack QVAC: STT ${stack.stt} · LLM ${stack.llm} · safety ${stack.safety} · HCE ${stack.hce_agent}.`
+    : "";
   if (state.config.fast) {
-    banner.textContent =
-      "Modo --fast: transcript gold + reglas (~1 s). Sin Whisper ni LLM.";
+    banner.hidden = false;
+    banner.innerHTML =
+      `Modo <code>--fast</code>: transcript gold + reglas (~1 s). Sin Whisper ni LLM.${stackLine}`;
+  } else if (stack) {
+    banner.hidden = false;
+    banner.innerHTML = `Track QVAC · inferencia 100% local · cloud_inference=<code>false</code>.${stackLine}`;
+  } else {
+    banner.hidden = true;
   }
 }
 
@@ -519,7 +587,7 @@ $("#btn-cancel-run").addEventListener("click", () => {
 $("#btn-volver-draft").addEventListener("click", () => setPhase("draft"));
 $("#btn-aprobar").addEventListener("click", () => {
   $("#aprobar-status").textContent =
-    "Nota aprobada (demo local). Nada salió de esta máquina.";
+    "Nota aprobada (demo local). Writes HCE quedan en pending_human — nada salió de esta máquina.";
 });
 
 boot();

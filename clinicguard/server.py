@@ -7,11 +7,11 @@ CLI vía API JSON. Todo local: no hay llamadas de red salvo 127.0.0.1.
     python -m clinicguard serve --fast     # transcript + sin LLM (~1 s)
 
 API:
-    GET  /api/config         → {"fast": bool}  (modo demo rápida)
+    GET  /api/config         → {"fast": bool, "stack": {...}}  (QVAC visible)
     GET  /api/cases          → casos demo (A near-miss, B control negativo) + HC
     POST /api/run            → {"case": "a"|"b", "source": "audio"|"transcript"}
                                arranca la pipeline en background, devuelve run_id
-    GET  /api/run/{run_id}   → {"state": "running"|"done"|"error", steps, result}
+    GET  /api/run/{run_id}   → {state, steps, result, proposal}
                                (polling; STT+LLM tarda 20–45 s; --fast ~1 s)
 """
 
@@ -31,6 +31,8 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 from .pipeline import run_pipeline
+from .propose import build_proposal
+from .schemas import PatientRecord
 
 _ROOT = Path(__file__).resolve().parent.parent
 _CORPUS = _ROOT / "corpus" / "clinic"
@@ -71,6 +73,15 @@ async def get_config(request: Request) -> JSONResponse:
                 if FAST_MODE
                 else "Modo completo: STT + extracción LLM local"
             ),
+            "track": "qvac",
+            "stack": {
+                "runtime": "tetherto-qvac-sdk",
+                "stt": "WHISPER_BASE_Q8_0 + VAD_SILERO",
+                "llm": "QWEN3_4B_INST_Q4_K_M",
+                "safety": "deterministic rules (no LLM)",
+                "hce_agent": "local propose (no LLM, pending_human)",
+                "cloud_inference": False,
+            },
         }
     )
 
@@ -110,8 +121,13 @@ async def _execute(run_id: str, case: dict[str, Any], source: str) -> None:
                 progress=on_progress,
                 skip_extract=FAST_MODE,
             )
+        hc = PatientRecord.model_validate(
+            json.loads(case["hc"].read_text(encoding="utf-8"))
+        )
+        proposal = build_proposal(hc, result)
         run["state"] = "done"
         run["result"] = result.model_dump(mode="json")
+        run["proposal"] = proposal.model_dump(mode="json")
     except Exception as exc:  # noqa: BLE001 — la UI muestra el error tal cual
         run["state"] = "error"
         run["error"] = f"{type(exc).__name__}: {exc}"
@@ -147,6 +163,7 @@ async def post_run(request: Request) -> JSONResponse:
         "steps": [],
         "transcript": None,
         "result": None,
+        "proposal": None,
         "error": None,
     }
     asyncio.get_running_loop().create_task(_execute(run_id, case, source))
@@ -158,7 +175,19 @@ async def get_run(request: Request) -> JSONResponse:
     if run is None:
         return JSONResponse({"error": "run_id desconocido"}, status_code=404)
     return JSONResponse(
-        {k: run[k] for k in ("state", "case", "source", "steps", "transcript", "result", "error")}
+        {
+            k: run[k]
+            for k in (
+                "state",
+                "case",
+                "source",
+                "steps",
+                "transcript",
+                "result",
+                "proposal",
+                "error",
+            )
+        }
     )
 
 

@@ -100,6 +100,26 @@
           <div id="draft-banner"></div>
           <p class="tiny" id="draft-estado"></p>
           <article class="soap" id="soap"></article>
+          <section class="proposal" id="proposal-panel" hidden>
+            <header class="proposal__head">
+              <h2>Propuesta HCE</h2>
+              <span class="proposal__badge" id="proposal-gate">gate</span>
+            </header>
+            <p class="tiny" id="proposal-summary"></p>
+            <div class="proposal__grid">
+              <div>
+                <h3 class="proposal__h">SOAP delta</h3>
+                <dl class="proposal__soap" id="proposal-soap"></dl>
+              </div>
+              <div>
+                <h3 class="proposal__h">Write actions</h3>
+                <ul class="proposal__list" id="proposal-actions"></ul>
+              </div>
+            </div>
+            <h3 class="proposal__h">Gaps vs visitas previas</h3>
+            <ul class="proposal__list" id="proposal-gaps"></ul>
+            <p class="tiny" id="proposal-note"></p>
+          </section>
           <details class="transcript-box">
             <summary class="tiny" id="transcript-summary">Transcript</summary>
             <p class="muted" id="transcript-text"></p>
@@ -113,6 +133,7 @@
         <div class="phase-panel" data-phase-panel="approve" hidden>
           <h2 style="margin-top:0">Revisá antes de firmar</h2>
           <p class="muted">Nada llega a la historia clínica sin tu aprobación.</p>
+          <div id="approve-proposal-strip" class="proposal-strip" hidden></div>
           <label class="tiny" for="nota">Nota editable</label>
           <textarea id="nota" class="note-doc" name="nota_clinica" rows="12" spellcheck="false" autocomplete="off"></textarea>
           <div class="actions">
