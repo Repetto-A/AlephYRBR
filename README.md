@@ -14,7 +14,7 @@ Requiere Python 3.12 (≥ 3.10) y Node.js ≥ 22.17 (para el worker QVAC).
 cd "C:\Users\conta\Documents\Ale\Software\Current Projects\AlephYRBR"
 py -3.12 -m venv .venv-qvac
 .\.venv-qvac\Scripts\Activate.ps1
-pip install tetherto-qvac-sdk==0.17.1
+pip install tetherto-qvac-sdk==0.17.1 starlette uvicorn
 $env:PYTHONIOENCODING='utf-8'
 ```
 
@@ -37,6 +37,43 @@ Cada corrida imprime el transcript, la nota SOAP en JSON y el veredicto, y
 escribe `out/run-<paciente>.json` + `out/run-<paciente>.html`. También se
 puede correr el caso A sin audio: `--transcript corpus/clinic/consulta-a.txt`
 (transcript gold, nota más limpia).
+
+## Shell web local (fase 2A)
+
+Misma pipeline que el CLI, con la UI de `design/mockups/` portada a
+`clinicguard/web/`. Sin cloud, sin login: el server solo escucha en 127.0.0.1.
+
+```powershell
+python -m clinicguard serve          # abre http://127.0.0.1:8787
+```
+
+Flujo de demo en la UI:
+
+1. **Preparar** — agenda con caso A (near-miss) y caso B (control negativo),
+   HC sintética al costado. Un click en «Iniciar» dispara la pipeline
+   (caso A: audio con Whisper; «Iniciar con transcript» usa el gold).
+2. **Escuchando** — progreso real de la corrida (STT + extracción tardan
+   20–45 s; la UI hace polling a `GET /api/run/{id}`).
+3. **Draft** — caso A: traza de incidente HC → Audio → **BLOQUEADO** (rojo
+   único, elemento signature) + campo bloqueado en el Plan + evidencia de la
+   regla; caso B: check verde `draft.safe`. Transcript visible y plegable.
+4. **Aprobar** — nota editable; con bloqueos abiertos el botón Aprobar queda
+   deshabilitado.
+
+API mínima (la usa la UI, sirve también para debug):
+`GET /api/cases` · `POST /api/run` con `{"case":"a"|"b","source":"audio"|"transcript"}`
+· `GET /api/run/{run_id}`. La decisión de safety sigue siendo la regla
+determinista del backend (`clinicguard/rules.py`); el frontend solo renderiza
+el `RunResult`.
+
+Nota offline: las fuentes (Archivo / IBM Plex Mono) se piden a Google Fonts;
+con WiFi off la UI cae a las fuentes del sistema sin romper nada.
+
+### Fase 2B (pendiente) — Tauri
+
+Cuando 2A esté ensayada: envolver `clinicguard/web/` en una ventana Tauri
+única (sin browser chrome) que invoque `python -m clinicguard serve` del venv
+local como sidecar. No cambia reglas ni schemas.
 
 ### Guión de 3 minutos (ensayado: 68 s de comandos)
 
