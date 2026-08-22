@@ -1,25 +1,219 @@
-/* Extras del shell local — solo lo que los mockups no cubren.
-   Los tokens y componentes viven en styles.css (copiado de design/mockups). */
+/* Sala de consulta — layout sobre tokens de styles.css */
 
 [hidden] {
   display: none !important;
 }
 
-/* Nav como indicador de estado del flujo */
-.nav-flow a[aria-disabled="true"] {
-  opacity: 0.45;
-  pointer-events: none;
+.room-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px dashed var(--line, #c5d0c9);
+  border-radius: 8px;
+  background: var(--surface-2, #f4f7f5);
+  color: var(--text-muted, #6b7672);
 }
 
-/* Pasos de progreso de la pipeline (pantalla 02) */
+.room-agenda {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.room-agenda__label {
+  font-size: var(--fs-xs, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6b7672);
+}
+
+.room-agenda__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  appearance: none;
+  border: 1px solid var(--line, #c5d0c9);
+  background: var(--surface, #fcfdfc);
+  color: var(--text-primary, #10221e);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: var(--fs-sm, 0.9rem);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 40px;
+  text-align: left;
+}
+
+.chip:hover {
+  border-color: var(--brand, #0a5c46);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--brand-soft, #d8ebe3);
+  border-color: var(--brand, #0a5c46);
+  color: var(--brand-ink, #063d2f);
+}
+
+.chip .chip__meta {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted, #6b7672);
+  margin-top: 2px;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr) minmax(200px, 0.85fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .room-grid {
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 1.5fr);
+  }
+  .room-evidence {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .room-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.room-side,
+.room-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.room-main__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.room-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.patient-name {
+  font-family: var(--font-display, "Archivo Expanded", Archivo, sans-serif);
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  letter-spacing: -0.03em;
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.phase-pill {
+  flex-shrink: 0;
+  font-family: var(--font-vital, "IBM Plex Mono", monospace);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line, #c5d0c9);
+  color: var(--text-muted, #6b7672);
+}
+
+.phase-pill[data-phase="recording"] {
+  border-color: var(--brand, #0a5c46);
+  color: var(--brand, #0a5c46);
+  background: var(--brand-soft, #d8ebe3);
+}
+
+.phase-pill[data-phase="processing"] {
+  border-color: var(--evidence, #12507b);
+  color: var(--evidence, #12507b);
+  background: var(--evidence-soft, #e4eef5);
+}
+
+.phase-pill[data-phase="draft"] {
+  border-color: var(--ok, #1e7a4f);
+  color: var(--ok, #1e7a4f);
+}
+
+.phase-pill[data-phase="draft"][data-blocked="true"] {
+  border-color: var(--incident, #c2281d);
+  color: var(--incident, #c2281d);
+  background: var(--incident-wash, #fbedeb);
+}
+
+.phase-panel {
+  margin-top: 8px;
+}
+
+.live-transcript {
+  max-width: 48ch;
+  margin: 12px auto 0;
+  text-align: left;
+  font-size: var(--fs-sm, 0.9rem);
+  line-height: 1.55;
+  color: var(--text-secondary, #3a4a45);
+  min-height: 4.5em;
+}
+
+.live-transcript em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--incident, #c2281d);
+}
+
+.wave--soft span {
+  opacity: 0.55;
+}
+
+.session-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.session-list li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line, #c5d0c9);
+  font-size: var(--fs-sm, 0.9rem);
+}
+
+.session-list li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.session-list strong {
+  display: block;
+  font-weight: 600;
+}
+
+.session-list .tiny {
+  margin-top: 2px;
+}
+
 .progress-steps {
   list-style: none;
-  margin: 0 auto 8px;
+  margin: 12px auto 8px;
   padding: 0;
   max-width: 52ch;
   text-align: left;
-  font-size: var(--fs-sm);
-  color: var(--text-tertiary);
+  font-size: var(--fs-sm, 0.9rem);
+  color: var(--text-tertiary, #5a6863);
   line-height: 1.7;
 }
 
@@ -32,26 +226,26 @@
   content: "·";
   position: absolute;
   left: 4px;
-  color: var(--brand);
+  color: var(--brand, #0a5c46);
   font-weight: 700;
 }
 
 .progress-steps li:last-child {
-  color: var(--text-primary);
+  color: var(--text-primary, #10221e);
   font-weight: 600;
 }
 
 .run-error {
-  color: var(--incident);
+  color: var(--incident, #c2281d);
   font-weight: 600;
   max-width: 52ch;
   margin: 8px auto;
+  text-align: center;
 }
 
-/* Transcript plegable en el draft */
 .transcript-box {
   margin-top: 18px;
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--line, #c5d0c9);
   padding-top: 12px;
 }
 
@@ -65,16 +259,21 @@
   margin: 10px 0 0;
 }
 
-/* HC de ambos casos en el panel de preparar */
-.hc-case-title {
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 18px 0 8px;
+.hc-live-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
 }
 
-.hc-case-title:first-child {
+.note-doc {
+  width: 100%;
   margin-top: 8px;
+  padding: 14px;
+  border: 1px solid var(--line, #c5d0c9);
+  border-radius: 8px;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--surface, #fcfdfc);
 }

@@ -1,24 +1,55 @@
-/* Shell local de ClinicGuard — port de design/mockups sobre la API del server.
-   Acá no hay lógica de safety: solo se renderiza el RunResult del backend. */
+/* Shell local — sala de consulta sobre la API del server.
+   Sin lógica de safety: solo renderiza el RunResult del backend. */
 
 "use strict";
 
 const $ = (sel) => document.querySelector(sel);
 
-const state = {
-  cases: [],
-  currentCase: null,
-  currentSource: null,
-  runId: null,
-  pollTimer: null,
-  run: null, // última respuesta de GET /api/run/{id}
-  config: { fast: false },
+const PAST_SESSIONS = {
+  a: [
+    { fecha: "12 mar 2026", titulo: "Control asma", tag: "safe" },
+    { fecha: "28 ene 2026", titulo: "Exacerbación leve", tag: "revisión" },
+  ],
+  b: [
+    { fecha: "15 feb 2026", titulo: "Control HTA", tag: "safe" },
+    { fecha: "10 nov 2025", titulo: "Ajuste enalapril", tag: "safe" },
+  ],
 };
 
-const SUBTITLES = {
-  preparar: "preparar consulta",
-  escuchando: "consulta en curso",
-  aprobar: "aprobación humana",
+const LIVE_LINES = {
+  a: [
+    "Paciente refiere palpitaciones y temblor de dos semanas…",
+    "Examen: FC 96 · PA 130/85 · auscultación normal.",
+    "Impresión: síndrome ansioso con hiperactividad adrenérgica.",
+    'Plan: “voy a indicar <em>propranolol</em> 40 mg cada 12 horas…”',
+  ],
+  b: [
+    "Control programado de hipertensión. Buena adherencia.",
+    "Examen: PA 128/82 · FC 72 · peso estable.",
+    "Impresión: HTA esencial en buen control.",
+    "Plan: continuar enalapril 10 mg/día · control en 3 meses.",
+  ],
+};
+
+const PHASE_COPY = {
+  idle: { kicker: "Listo para consultar", pill: "idle", sub: "sala de consulta" },
+  recording: { kicker: "Consulta en curso", pill: "grabando", sub: "escuchando" },
+  processing: { kicker: "Procesando en local", pill: "generando", sub: "pipeline local" },
+  draft: { kicker: "Borrador listo", pill: "draft", sub: "revisión" },
+  approve: { kicker: "Aprobación humana", pill: "firmar", sub: "aprobación humana" },
+};
+
+const state = {
+  cases: [],
+  config: { fast: false },
+  selectedId: null,
+  phase: "idle",
+  pendingSource: "transcript",
+  runId: null,
+  pollTimer: null,
+  liveTimer: null,
+  liveIdx: 0,
+  run: null,
 };
 
 function esc(text) {
@@ -32,134 +63,199 @@ function truncate(text, max) {
   return text.length <= max ? text : text.slice(0, max - 1).trimEnd() + "…";
 }
 
-/* ——— Navegación entre pantallas ——— */
+function selectedCase() {
+  return state.cases.find((c) => c.id === state.selectedId) || null;
+}
 
-function showScreen(name) {
-  document.querySelectorAll("[data-screen]").forEach((s) => {
-    s.hidden = s.dataset.screen !== name;
+function findingCritico(result) {
+  return (result.findings || []).find((f) => f.severidad === "critical") || null;
+}
+
+function hcCorta(evidenciaHc) {
+  const partes = String(evidenciaHc || "").split(" — ").slice(0, 2).join(" ");
+  return partes ? partes.charAt(0).toUpperCase() + partes.slice(1) : "";
+}
+
+function drogaDelMotivo(motivo) {
+  const m = String(motivo || "").match(/propone\s+([a-záéíóúñ]+)/i);
+  return m ? m[1] : "betabloqueante";
+}
+
+function setPhase(phase) {
+  state.phase = phase;
+  document.querySelectorAll("[data-phase-panel]").forEach((el) => {
+    el.hidden = el.dataset.phasePanel !== phase;
   });
-  document.querySelectorAll(".nav-flow a").forEach((a) => {
-    if (a.dataset.nav === name) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
-  });
-  if (name === "draft") {
-    const blocked = state.run?.result?.status === "blocked";
-    $("#topbar-sub").textContent = blocked ? "draft bloqueado" : "draft seguro";
-  } else {
-    $("#topbar-sub").textContent = SUBTITLES[name] || "";
+
+  const copy = PHASE_COPY[phase] || PHASE_COPY.idle;
+  $("#phase-kicker").textContent = copy.kicker;
+  $("#topbar-sub").textContent = copy.sub;
+
+  const pill = $("#phase-pill");
+  pill.textContent = copy.pill;
+  pill.dataset.phase = phase;
+  delete pill.dataset.blocked;
+
+  if (phase === "draft" && state.run?.result?.status === "blocked") {
+    pill.dataset.blocked = "true";
+    pill.textContent = "blocked";
+    $("#topbar-sub").textContent = "draft bloqueado";
+    $("#phase-kicker").textContent = "Near-miss detectado";
+  } else if (phase === "draft" && state.run?.result?.status === "safe") {
+    $("#topbar-sub").textContent = "draft seguro";
   }
 }
 
-function setNavEnabled(name, enabled) {
-  const a = document.querySelector(`.nav-flow a[data-nav="${name}"]`);
-  if (enabled) a.removeAttribute("aria-disabled");
-  else a.setAttribute("aria-disabled", "true");
+function stopLive() {
+  clearInterval(state.liveTimer);
+  state.liveTimer = null;
+  state.liveIdx = 0;
 }
 
-/* ——— 01 Preparar ——— */
-
-async function loadConfig() {
-  try {
-    const res = await fetch("/api/config");
-    state.config = await res.json();
-  } catch {
-    state.config = { fast: false };
-  }
-  const banner = $("#fast-banner");
-  if (banner) {
-    banner.hidden = !state.config.fast;
-    if (state.config.fast) {
-      banner.textContent =
-        "Modo --fast: transcript gold + reglas (~1 s). Sin Whisper ni LLM.";
-    }
-  }
-}
-
-async function loadCases() {
-  await loadConfig();
-  const res = await fetch("/api/cases");
-  state.cases = await res.json();
-  renderAgenda();
-  renderHcPanel();
+function stopPolling() {
+  clearInterval(state.pollTimer);
+  state.pollTimer = null;
 }
 
 function renderAgenda() {
-  const ul = $("#agenda");
-  ul.innerHTML = "";
-  for (const c of state.cases) {
-    const li = document.createElement("li");
-    // Transcript siempre es el camino rápido (y el default). Audio queda secundario.
-    const buttons = c.tiene_audio
-      ? `<span style="display:flex; gap:8px; flex-wrap:wrap">
-           <button class="btn btn-primary" data-case="${c.id}" data-source="transcript">Iniciar (transcript · rápido)</button>
-           <button class="btn btn-ghost" data-case="${c.id}" data-source="audio">Con audio (~40 s)</button>
-         </span>`
-      : `<button class="btn btn-primary" data-case="${c.id}" data-source="transcript">Iniciar</button>`;
-    li.innerHTML = `
-      <div>
-        <strong>${esc(c.titulo)}</strong>
-        <span class="tiny">${esc(c.descripcion)}</span>
-      </div>
-      ${buttons}`;
-    ul.appendChild(li);
-  }
-  ul.querySelectorAll("button[data-case]").forEach((btn) => {
-    btn.addEventListener("click", () => startRun(btn.dataset.case, btn.dataset.source));
-  });
-}
-
-function renderHcPanel() {
-  const box = $("#hc-panel");
+  const box = $("#agenda-chips");
   box.innerHTML = "";
   for (const c of state.cases) {
-    const hc = c.hc;
-    const antecedentes = hc.antecedentes
-      .map((a) => `${a.condicion}${a.severidad ? ` (${a.severidad})` : ""}`)
-      .join(" · ");
-    const medicacion = hc.medicacion_actual
-      .map((m) => `${m.droga}${m.dosis ? ` ${m.dosis}` : ""}`)
-      .join(" · ");
-    const alergias = hc.alergias.length ? hc.alergias.join(" · ") : "Ninguna conocida";
-    box.insertAdjacentHTML(
-      "beforeend",
-      `<p class="hc-case-title">${esc(c.titulo)}</p>
-       <dl class="hc-sheet">
-         <dt>Paciente</dt>
-         <dd>${esc(hc.nombre)}${hc.edad ? `, ${hc.edad} años` : ""}</dd>
-         <dt>Antecedentes</dt>
-         <dd>${esc(antecedentes)}</dd>
-         <dt>Alergias</dt>
-         <dd>${esc(alergias)}</dd>
-         <dt>Medicación habitual</dt>
-         <dd>${esc(medicacion)}</dd>
-       </dl>`
-    );
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "chip";
+    btn.setAttribute("aria-pressed", c.id === state.selectedId ? "true" : "false");
+    btn.innerHTML = `${esc(c.titulo)}<span class="chip__meta">${esc(c.descripcion)}</span>`;
+    btn.addEventListener("click", () => selectPatient(c.id));
+    box.appendChild(btn);
   }
 }
 
-/* ——— 02 Escuchando / corrida ——— */
+function renderHc(c) {
+  const box = $("#hc-live");
+  if (!c) {
+    box.innerHTML = `<p class="muted">Elegí un paciente de la agenda.</p>`;
+    return;
+  }
+  const hc = c.hc;
+  const antecedentes = (hc.antecedentes || [])
+    .map((a) => `${a.condicion}${a.severidad ? ` (${a.severidad})` : ""}`)
+    .join(" · ");
+  const medicacion = (hc.medicacion_actual || [])
+    .map((m) => `${m.droga}${m.dosis ? ` ${m.dosis}` : ""}`)
+    .join(" · ");
+  const alergias = (hc.alergias || []).length ? hc.alergias.join(" · ") : "Ninguna conocida";
 
-async function startRun(caseId, source) {
-  state.currentCase = caseId;
-  state.currentSource = source;
+  box.innerHTML = `
+    <p class="hc-live-title">${esc(hc.nombre)}${hc.edad ? `, ${hc.edad} años` : ""}</p>
+    <dl class="hc-sheet">
+      <dt>Antecedentes</dt>
+      <dd>${esc(antecedentes || "—")}</dd>
+      <dt>Alergias</dt>
+      <dd>${esc(alergias)}</dd>
+      <dt>Medicación habitual</dt>
+      <dd>${esc(medicacion || "—")}</dd>
+      <dt>ID</dt>
+      <dd><span class="vital">${esc(hc.patient_id || c.id)}</span></dd>
+    </dl>`;
+}
+
+function renderSessions(caseId) {
+  const ul = $("#session-list");
+  const rows = PAST_SESSIONS[caseId] || [];
+  if (!rows.length) {
+    ul.innerHTML = `<li class="muted">Sin sesiones previas en la demo.</li>`;
+    return;
+  }
+  ul.innerHTML = rows
+    .map(
+      (s) => `<li>
+        <strong>${esc(s.titulo)}</strong>
+        <span class="tiny">${esc(s.fecha)} · ${esc(s.tag)}</span>
+      </li>`
+    )
+    .join("");
+}
+
+function resetEvidence() {
+  $("#evidence-panel").innerHTML = `
+    <h3>Contexto</h3>
+    <p class="muted">Acá aparece la evidencia de la regla cuando hay un near-miss.</p>`;
+}
+
+function selectPatient(caseId) {
+  stopLive();
+  stopPolling();
+  state.selectedId = caseId;
+  state.run = null;
+  state.runId = null;
+  renderAgenda();
+  const c = selectedCase();
+  renderHc(c);
+  renderSessions(caseId);
+  resetEvidence();
+  $("#patient-heading").textContent = c?.hc?.nombre || c?.titulo || "Paciente";
+  $("#patient-sub").textContent = c?.descripcion || "";
+  $("#btn-start-rec").disabled = false;
+  $("#btn-from-transcript").disabled = false;
+  if (state.config.fast) {
+    $("#btn-start-rec").textContent = "Simular consulta y generar";
+  } else {
+    $("#btn-start-rec").textContent = c?.tiene_audio
+      ? "Comenzar a grabar"
+      : "Simular consulta";
+  }
+  setPhase("idle");
+}
+
+function startRecording() {
+  const c = selectedCase();
+  if (!c) return;
+  state.pendingSource =
+    !state.config.fast && c.tiene_audio ? "audio" : "transcript";
+  setPhase("recording");
+  const lines = LIVE_LINES[c.id] || LIVE_LINES.a;
+  const el = $("#live-transcript");
+  el.innerHTML = "";
+  state.liveIdx = 0;
+  stopLive();
+  el.innerHTML = lines[0];
+  state.liveIdx = 1;
+  state.liveTimer = setInterval(() => {
+    if (state.liveIdx >= lines.length) {
+      stopLive();
+      return;
+    }
+    el.innerHTML = lines.slice(0, state.liveIdx + 1).join("<br />");
+    state.liveIdx += 1;
+  }, 1600);
+}
+
+function cancelRecording() {
+  stopLive();
+  setPhase("idle");
+  $("#live-transcript").textContent = "";
+}
+
+async function startRun(source) {
+  const c = selectedCase();
+  if (!c) return;
+  stopLive();
+  state.pendingSource = source;
   state.run = null;
   $("#progress-steps").innerHTML = "";
   $("#run-error").hidden = true;
-  $("#listen-case").textContent = `Paciente ${caseId.toUpperCase()}`;
-  setNavEnabled("escuchando", true);
-  setNavEnabled("draft", false);
-  setNavEnabled("aprobar", false);
-  showScreen("escuchando");
+  setPhase("processing");
 
   try {
     const res = await fetch("/api/run", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ case: caseId, source }),
+      body: JSON.stringify({ case: c.id, source }),
     });
     if (!res.ok) throw new Error((await res.json()).error || res.statusText);
     state.runId = (await res.json()).run_id;
-    state.pollTimer = setInterval(poll, 1200);
+    state.pollTimer = setInterval(poll, 900);
   } catch (err) {
     showRunError(String(err.message || err));
   }
@@ -170,30 +266,23 @@ async function poll() {
     const res = await fetch(`/api/run/${state.runId}`);
     const run = await res.json();
     state.run = run;
-    renderSteps(run.steps);
+    renderSteps(run.steps || []);
     if (run.state === "done") {
       stopPolling();
       renderDraft(run);
-      setNavEnabled("draft", true);
-      setNavEnabled("aprobar", true);
-      showScreen("draft");
+      setPhase("draft");
     } else if (run.state === "error") {
       stopPolling();
       showRunError(run.error);
     }
   } catch {
-    /* red local: reintenta en el próximo tick */
+    /* reintento */
   }
-}
-
-function stopPolling() {
-  clearInterval(state.pollTimer);
-  state.pollTimer = null;
 }
 
 function renderSteps(steps) {
   $("#progress-steps").innerHTML = steps
-    .map((s) => `<li>${esc(s.trim())}</li>`)
+    .map((s) => `<li>${esc(String(s).trim())}</li>`)
     .join("");
 }
 
@@ -201,23 +290,6 @@ function showRunError(message) {
   const el = $("#run-error");
   el.textContent = `Error en la corrida: ${message}`;
   el.hidden = false;
-}
-
-/* ——— 03 / 04 Draft ——— */
-
-function findingCritico(result) {
-  return result.findings.find((f) => f.severidad === "critical") || null;
-}
-
-function hcCorta(evidenciaHc) {
-  // "asma — severa — detalle largo…" → "Asma severa"
-  const partes = evidenciaHc.split(" — ").slice(0, 2).join(" ");
-  return partes.charAt(0).toUpperCase() + partes.slice(1);
-}
-
-function drogaDelMotivo(motivo) {
-  const m = motivo.match(/propone\s+([a-záéíóúñ]+)/i);
-  return m ? m[1] : "betabloqueante";
 }
 
 function renderDraft(run) {
@@ -244,25 +316,30 @@ function renderDraft(run) {
   const actions = $("#draft-actions");
   if (blocked) {
     actions.innerHTML = `
-      <button class="btn btn-primary" id="btn-ir-aprobar">Corregir plan y continuar</button>
-      <button class="btn btn-ghost" type="button" disabled>Aprobar nota</button>`;
+      <button class="btn btn-primary" type="button" id="btn-ir-aprobar">Corregir plan y continuar</button>
+      <button class="btn btn-ghost" type="button" disabled>Aprobar nota</button>
+      <button class="btn btn-ghost" type="button" id="btn-nueva">Nueva consulta</button>`;
     $("#draft-hint").textContent =
       "Con bloqueos abiertos, Aprobar queda deshabilitado. El camino es corregir el plan.";
   } else if (escalate) {
     actions.innerHTML = `
-      <button class="btn btn-ghost" id="btn-ir-preparar">Volver a preparar</button>`;
+      <button class="btn btn-ghost" type="button" id="btn-nueva">Volver a la sala</button>`;
     $("#draft-hint").textContent =
-      "Sin nota validada no se puede aprobar. Reintentá la corrida o revisá el transcript.";
+      "Sin nota validada no se puede aprobar. Reintentá o revisá el transcript.";
   } else {
     actions.innerHTML = `
-      <button class="btn btn-primary" id="btn-ir-aprobar">Revisar y aprobar</button>`;
+      <button class="btn btn-primary" type="button" id="btn-ir-aprobar">Revisar y aprobar</button>
+      <button class="btn btn-ghost" type="button" id="btn-nueva">Nueva consulta</button>`;
     $("#draft-hint").textContent = "";
   }
+
   $("#btn-ir-aprobar")?.addEventListener("click", () => {
     renderAprobar(result);
-    showScreen("aprobar");
+    setPhase("approve");
   });
-  $("#btn-ir-preparar")?.addEventListener("click", () => showScreen("preparar"));
+  $("#btn-nueva")?.addEventListener("click", () => {
+    if (state.selectedId) selectPatient(state.selectedId);
+  });
 
   const meta = [];
   if (result.modelo_stt)
@@ -361,7 +438,6 @@ function renderSoap(result, finding) {
 function renderEvidence(result, finding) {
   const aside = $("#evidence-panel");
   if (result.status === "blocked" && finding) {
-    aside.className = "panel panel--evidence evidence";
     aside.innerHTML = `
       <h3>Evidencia de la regla</h3>
       <p class="muted">Decisión determinista, offline — no cloud.</p>
@@ -375,7 +451,6 @@ function renderEvidence(result, finding) {
         <dd>Regla determinista <span class="vital">${esc(finding.rule_id)}</span></dd>
       </dl>`;
   } else if (result.status === "safe") {
-    aside.className = "panel panel--dim";
     aside.innerHTML = `
       <h3>Panel de evidencia</h3>
       <p class="muted">Sin disparadores de regla. No se fuerza una alerta si no hay riesgo.</p>
@@ -386,14 +461,11 @@ function renderEvidence(result, finding) {
         <dd><span class="vital">0</span></dd>
       </dl>`;
   } else {
-    aside.className = "panel panel--dim";
     aside.innerHTML = `
       <h3>Panel de evidencia</h3>
       <p class="muted">La extracción no validó; el estado es <code>escalate</code>. La regla de safety igual corrió sobre el transcript crudo.</p>`;
   }
 }
-
-/* ——— 05 Aprobar ——— */
 
 function renderAprobar(result) {
   const n = result.note;
@@ -401,39 +473,53 @@ function renderAprobar(result) {
     ? `S: ${n.subjetivo}\nO: ${n.objetivo}\nA: ${n.evaluacion}\nP: ${n.plan}`
     : `Nota no disponible: ${result.note_refusal_motivo || "extracción rechazada"}`;
   $("#nota").value = texto;
-  const btn = $("#btn-aprobar");
-  btn.disabled = result.status !== "safe";
+  $("#btn-aprobar").disabled = result.status !== "safe";
   $("#aprobar-status").textContent = "";
 }
 
-/* ——— Wiring global ——— */
+async function loadConfig() {
+  try {
+    const res = await fetch("/api/config");
+    state.config = await res.json();
+  } catch {
+    state.config = { fast: false };
+  }
+  const banner = $("#fast-banner");
+  banner.hidden = !state.config.fast;
+  if (state.config.fast) {
+    banner.textContent =
+      "Modo --fast: transcript gold + reglas (~1 s). Sin Whisper ni LLM.";
+  }
+}
 
-document.querySelectorAll(".nav-flow a").forEach((a) => {
-  a.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (a.getAttribute("aria-disabled") === "true") return;
-    const name = a.dataset.nav;
-    if (name === "aprobar" && state.run?.result) renderAprobar(state.run.result);
-    showScreen(name);
-  });
-});
+async function boot() {
+  await loadConfig();
+  const res = await fetch("/api/cases");
+  state.cases = await res.json();
+  renderAgenda();
+  if (state.cases[0]) selectPatient(state.cases[0].id);
+}
 
 $("#brand-home").addEventListener("click", (e) => {
   e.preventDefault();
-  showScreen("preparar");
+  if (state.selectedId) selectPatient(state.selectedId);
 });
 
-$("#btn-cancelar").addEventListener("click", () => {
+$("#btn-start-rec").addEventListener("click", startRecording);
+$("#btn-from-transcript").addEventListener("click", () => startRun("transcript"));
+$("#btn-stop-rec").addEventListener("click", () => {
+  stopLive();
+  startRun(state.pendingSource);
+});
+$("#btn-cancel-rec").addEventListener("click", cancelRecording);
+$("#btn-cancel-run").addEventListener("click", () => {
   stopPolling();
-  showScreen("preparar");
+  setPhase("idle");
 });
-
-$("#btn-volver-draft").addEventListener("click", () => showScreen("draft"));
-
+$("#btn-volver-draft").addEventListener("click", () => setPhase("draft"));
 $("#btn-aprobar").addEventListener("click", () => {
   $("#aprobar-status").textContent =
     "Nota aprobada (demo local). Nada salió de esta máquina.";
 });
 
-loadCases();
-showScreen("preparar");
+boot();

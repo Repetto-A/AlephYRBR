@@ -38,27 +38,27 @@ escribe `out/run-<paciente>.json` + `out/run-<paciente>.html`. También se
 puede correr el caso A sin audio: `--transcript corpus/clinic/consulta-a.txt`
 (transcript gold, nota más limpia).
 
-## Shell web local (fase 2A)
+## Shell web local (fase 2A) — sala de consulta
 
-Misma pipeline que el CLI, con la UI de `design/mockups/` portada a
-`clinicguard/web/`. Sin cloud, sin login: el server solo escucha en 127.0.0.1.
+Misma pipeline que el CLI. UI en `clinicguard/web/`: **una sola vista** de
+consultorio (agenda + HC + grabar + draft + aprobar). Sin cloud, sin login.
 
 ```powershell
-python -m clinicguard serve          # abre http://127.0.0.1:8787
+python -m clinicguard serve                 # http://127.0.0.1:8787
+python -m clinicguard serve --fast          # transcript + reglas ~1 s (ensayo)
 ```
 
-Flujo de demo en la UI:
+Flujo en la UI:
 
-1. **Preparar** — agenda con caso A (near-miss) y caso B (control negativo),
-   HC sintética al costado. Un click en «Iniciar» dispara la pipeline
-   (caso A: audio con Whisper; «Iniciar con transcript» usa el gold).
-2. **Escuchando** — progreso real de la corrida (STT + extracción tardan
-   20–45 s; la UI hace polling a `GET /api/run/{id}`).
-3. **Draft** — caso A: traza de incidente HC → Audio → **BLOQUEADO** (rojo
-   único, elemento signature) + campo bloqueado en el Plan + evidencia de la
-   regla; caso B: check verde `draft.safe`. Transcript visible y plegable.
-4. **Aprobar** — nota editable; con bloqueos abiertos el botón Aprobar queda
-   deshabilitado.
+1. **Agenda** — chips A (near-miss) / B (control). HC + sesiones previas
+   (fake) siempre visibles a la izquierda.
+2. **Comenzar a grabar** — mic simulado + foreshadowing en vivo; **Detener y
+   generar nota** dispara el pipeline (audio real si no es `--fast`). Atajo:
+   «Generar desde transcript».
+3. **Procesando** — progreso real (STT + extracción; 20–45 s, o ~1 s en `--fast`).
+4. **Draft** — caso A: traza HC → Audio → **BLOQUEADO** + plan blocked;
+   caso B: check verde. Evidencia de la regla a la derecha.
+5. **Aprobar** — nota editable; disabled si hay bloqueos.
 
 API mínima (la usa la UI, sirve también para debug):
 `GET /api/cases` · `POST /api/run` con `{"case":"a"|"b","source":"audio"|"transcript"}`
