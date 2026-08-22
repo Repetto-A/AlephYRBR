@@ -12,6 +12,7 @@ const state = {
   runId: null,
   pollTimer: null,
   run: null, // última respuesta de GET /api/run/{id}
+  config: { fast: false },
 };
 
 const SUBTITLES = {
@@ -57,7 +58,25 @@ function setNavEnabled(name, enabled) {
 
 /* ——— 01 Preparar ——— */
 
+async function loadConfig() {
+  try {
+    const res = await fetch("/api/config");
+    state.config = await res.json();
+  } catch {
+    state.config = { fast: false };
+  }
+  const banner = $("#fast-banner");
+  if (banner) {
+    banner.hidden = !state.config.fast;
+    if (state.config.fast) {
+      banner.textContent =
+        "Modo --fast: transcript gold + reglas (~1 s). Sin Whisper ni LLM.";
+    }
+  }
+}
+
 async function loadCases() {
+  await loadConfig();
   const res = await fetch("/api/cases");
   state.cases = await res.json();
   renderAgenda();
@@ -69,10 +88,11 @@ function renderAgenda() {
   ul.innerHTML = "";
   for (const c of state.cases) {
     const li = document.createElement("li");
+    // Transcript siempre es el camino rápido (y el default). Audio queda secundario.
     const buttons = c.tiene_audio
       ? `<span style="display:flex; gap:8px; flex-wrap:wrap">
-           <button class="btn btn-primary" data-case="${c.id}" data-source="audio">Iniciar</button>
-           <button class="btn btn-ghost" data-case="${c.id}" data-source="transcript">Iniciar con transcript</button>
+           <button class="btn btn-primary" data-case="${c.id}" data-source="transcript">Iniciar (transcript · rápido)</button>
+           <button class="btn btn-ghost" data-case="${c.id}" data-source="audio">Con audio (~40 s)</button>
          </span>`
       : `<button class="btn btn-primary" data-case="${c.id}" data-source="transcript">Iniciar</button>`;
     li.innerHTML = `

@@ -31,10 +31,20 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--out-dir", type=Path, default=Path("out"), help="Directorio de salida"
     )
+    run.add_argument(
+        "--fast",
+        action="store_true",
+        help="Saltea LLM (nota demo). Con --audio igual corre STT; preferí --transcript",
+    )
 
     serve = sub.add_parser("serve", help="Levanta el shell web local (misma pipeline)")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8787)
+    serve.add_argument(
+        "--fast",
+        action="store_true",
+        help="Demo rápida: fuerza transcript + saltea LLM (~1 s). Sin Whisper ni Qwen",
+    )
     return parser
 
 
@@ -55,6 +65,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
             audio_path=args.audio,
             transcript_path=args.transcript,
             progress=_print_progress,
+            skip_extract=args.fast,
         )
     )
 
@@ -84,10 +95,15 @@ def _cmd_run(args: argparse.Namespace) -> int:
 def _cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
-    from .server import app
+    from . import server
 
-    print(f"ClinicGuard shell local → http://{args.host}:{args.port}", flush=True)
-    uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
+    server.FAST_MODE = bool(args.fast)
+    mode = "FAST (transcript + sin LLM)" if args.fast else "completo (STT+LLM)"
+    print(
+        f"ClinicGuard shell local → http://{args.host}:{args.port}  [{mode}]",
+        flush=True,
+    )
+    uvicorn.run(server.app, host=args.host, port=args.port, log_level="warning")
     return 0
 
 

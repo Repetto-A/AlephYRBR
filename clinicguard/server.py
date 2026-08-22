@@ -4,13 +4,15 @@ Sirve la UI estática de clinicguard/web/ y expone la misma pipeline que el
 CLI vía API JSON. Todo local: no hay llamadas de red salvo 127.0.0.1.
 
     python -m clinicguard serve            # http://127.0.0.1:8787
+    python -m clinicguard serve --fast     # transcript + sin LLM (~1 s)
 
 API:
+    GET  /api/config         → {"fast": bool}  (modo demo rápida)
     GET  /api/cases          → casos demo (A near-miss, B control negativo) + HC
     POST /api/run            → {"case": "a"|"b", "source": "audio"|"transcript"}
                                arranca la pipeline en background, devuelve run_id
     GET  /api/run/{run_id}   → {"state": "running"|"done"|"error", steps, result}
-                               (polling; STT+LLM tarda 20–45 s)
+                               (polling; STT+LLM tarda 20–45 s; --fast ~1 s)
 """
 
 from __future__ import annotations
@@ -33,6 +35,9 @@ from .pipeline import run_pipeline
 _ROOT = Path(__file__).resolve().parent.parent
 _CORPUS = _ROOT / "corpus" / "clinic"
 _WEB = Path(__file__).resolve().parent / "web"
+
+# Lo setea cli._cmd_serve cuando pasás --fast.
+FAST_MODE: bool = False
 
 CASES: dict[str, dict[str, Any]] = {
     "a": {
@@ -57,15 +62,30 @@ RUNS: dict[str, dict[str, Any]] = {}
 _pipeline_lock = asyncio.Lock()
 
 
+async def get_config(request: Request) -> JSONResponse:
+    return JSONResponse(
+        {
+            "fast": FAST_MODE,
+            "hint": (
+                "Modo rápido: transcript gold + reglas, sin Whisper ni LLM"
+                if FAST_MODE
+                else "Modo completo: STT + extracción LLM local"
+            ),
+        }
+    )
+
+
 async def get_cases(request: Request) -> JSONResponse:
     out = []
     for case_id, case in CASES.items():
+        # En --fast no ofrecemos audio: el botón principal es transcript.
+        tiene_audio = case["audio"] is not None and not FAST_MODE
         out.append(
             {
                 "id": case_id,
                 "titulo": case["titulo"],
                 "descripcion": case["descripcion"],
-                "tiene_audio": case["audio"] is not None,
+                "tiene_audio": tiene_audio,
                 "hc": json.loads(case["hc"].read_text(encoding="utf-8")),
             }
         )
@@ -88,6 +108,7 @@ async def _execute(run_id: str, case: dict[str, Any], source: str) -> None:
                 audio_path=case["audio"] if source == "audio" else None,
                 transcript_path=case["transcript"] if source == "transcript" else None,
                 progress=on_progress,
+                skip_extract=FAST_MODE,
             )
         run["state"] = "done"
         run["result"] = result.model_dump(mode="json")
@@ -103,7 +124,13 @@ async def post_run(request: Request) -> JSONResponse:
     if case is None:
         return JSONResponse({"error": f"Caso desconocido: {case_id!r}"}, status_code=400)
 
-    source = body.get("source", "audio" if case["audio"] is not None else "transcript")
+    # En --fast siempre transcript (aunque el cliente pida audio).
+    if FAST_MODE:
+        source = "transcript"
+    else:
+        source = body.get(
+            "source", "audio" if case["audio"] is not None else "transcript"
+        )
     if source not in ("audio", "transcript"):
         return JSONResponse({"error": f"Fuente inválida: {source!r}"}, status_code=400)
     if source == "audio" and case["audio"] is None:
@@ -137,6 +164,7 @@ async def get_run(request: Request) -> JSONResponse:
 
 app = Starlette(
     routes=[
+        Route("/api/config", get_config, methods=["GET"]),
         Route("/api/cases", get_cases, methods=["GET"]),
         Route("/api/run", post_run, methods=["POST"]),
         Route("/api/run/{run_id}", get_run, methods=["GET"]),
