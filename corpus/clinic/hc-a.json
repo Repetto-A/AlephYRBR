@@ -1,0 +1,24 @@
+{
+  "patient_id": "HC-A-001",
+  "nombre": "Ana López",
+  "edad": 34,
+  "sexo": "F",
+  "antecedentes": [
+    {
+      "condicion": "asma",
+      "severidad": "severa",
+      "detalle": "Asma severa persistente diagnosticada a los 19 años. Internación por crisis asmática en 2024 (requirió nebulizaciones continuas y corticoides EV). Última exacerbación hace 4 meses."
+    },
+    {
+      "condicion": "rinitis alérgica",
+      "severidad": "leve",
+      "detalle": "Estacional, en tratamiento con antihistamínicos a demanda."
+    }
+  ],
+  "medicacion_actual": [
+    { "droga": "budesonide/formoterol", "dosis": "160/4.5 mcg", "frecuencia": "2 veces por día", "via": "inhalatoria" },
+    { "droga": "salbutamol", "dosis": "100 mcg", "frecuencia": "a demanda", "via": "inhalatoria" }
+  ],
+  "alergias": ["ácido acetilsalicílico (broncoespasmo)"],
+  "nota": "Paciente sintética generada para demo. No corresponde a ninguna persona real."
+}

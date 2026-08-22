@@ -1,0 +1,23 @@
+{
+  "patient_id": "HC-B-001",
+  "nombre": "Jorge Díaz",
+  "edad": 58,
+  "sexo": "M",
+  "antecedentes": [
+    {
+      "condicion": "hipertensión arterial",
+      "severidad": "moderada",
+      "detalle": "HTA esencial diagnosticada hace 8 años, en control regular. Sin daño de órgano blanco conocido."
+    },
+    {
+      "condicion": "dislipemia",
+      "severidad": "leve",
+      "detalle": "LDL levemente elevado, en tratamiento dietario."
+    }
+  ],
+  "medicacion_actual": [
+    { "droga": "enalapril", "dosis": "10 mg", "frecuencia": "1 vez por día", "via": "oral" }
+  ],
+  "alergias": [],
+  "nota": "Paciente sintético generado para demo. No corresponde a ninguna persona real."
+}
