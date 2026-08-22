@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prognosia Health — La nota se escribe sola. El riesgo no pasa.</title>
+  <meta name="description" content="Prognosia asiste a médicos y enfermeros para documentar la consulta sin esfuerzo, y retiene cualquier indicación que contradiga la historia clínica. 100% local: la información del paciente nunca sale del consultorio." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/prognosiaicon.png" />
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="#" translate="no">
+      <img src="assets/prognosiatext.svg" alt="Prognosia Health" height="18" />
+    </a>
+    <nav class="topnav">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#beneficios">Beneficios</a>
+      <a href="#seguridad">Seguridad</a>
+    </nav>
+    <a class="btn btn-gradient" href="https://github.com/Repetto-A/AlephYRBR" target="_blank" rel="noopener">Descargar Prognosia</a>
+  </header>
+
+  <main>
+
+    <!-- ===== Hero ===== -->
+    <section class="hero">
+      <p class="eyebrow">Asistente de documentación clínica</p>
+      <h1>La nota se escribe sola.<br />El riesgo no pasa.</h1>
+      <p class="hero__sub">
+        Prognosia asiste a médicos y enfermeros para documentar cada consulta
+        sin esfuerzo, y retiene cualquier indicación que contradiga la historia
+        clínica antes de que llegue al paciente.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn-gradient btn-lg" href="https://github.com/Repetto-A/AlephYRBR" target="_blank" rel="noopener">Descargar Prognosia</a>
+        <a class="btn btn-ghost btn-lg" href="#como-funciona">Ver cómo funciona</a>
+      </div>
+      <p class="hero__chip">100% local · la información del paciente nunca sale del consultorio</p>
+    </section>
+
+    <!-- ===== Solución ===== -->
+    <section class="band">
+      <p class="eyebrow">Solución</p>
+      <h2>Documentar deja de ser una carga.<br />Equivocarse deja de ser un riesgo.</h2>
+      <div class="cols-3">
+        <div class="card">
+          <h3>Menos carga administrativa</h3>
+          <p>El profesional habla con su paciente como siempre. Prognosia escucha, redacta y estructura la nota en segundos: nadie más pierde horas haciendo carga de datos.</p>
+        </div>
+        <div class="card">
+          <h3>Registros más completos</h3>
+          <p>Notas consistentes y con el formato clínico de siempre (SOAP), listas para revisar. Historias clínicas más robustas que respaldan cada atención.</p>
+        </div>
+        <div class="card">
+          <h3>Seguridad del paciente</h3>
+          <p>Prognosia compara el plan propuesto con los antecedentes, alergias y medicación del paciente. Si algo contradice la historia clínica, lo retiene y explica por qué.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Cómo funciona ===== -->
+    <section class="band" id="como-funciona">
+      <p class="eyebrow">Fácil de implementar, fácil de usar</p>
+      <h2>Tres pasos, cero fricción</h2>
+      <ol class="steps">
+        <li>
+          <span class="steps__num">01</span>
+          <div>
+            <h3>Elegí el paciente</h3>
+            <p>Tu lista de pacientes del día, con la historia clínica siempre a la vista. Registrar un paciente nuevo lleva segundos.</p>
+          </div>
+        </li>
+        <li>
+          <span class="steps__num">02</span>
+          <div>
+            <h3>Atendé como siempre</h3>
+            <p>Apretá un botón y hablá con tu paciente mirándolo a los ojos, no al teclado. Prognosia escucha la consulta (o escribís lo conversado) y arma el borrador de la nota al instante.</p>
+          </div>
+        </li>
+        <li>
+          <span class="steps__num">03</span>
+          <div>
+            <h3>Revisá y firmá</h3>
+            <p>Nada llega a la historia clínica sin tu firma. Y si el plan choca con los antecedentes del paciente, Prognosia lo retiene y te muestra la evidencia antes de que puedas firmar.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ===== Diferencial ===== -->
+    <section class="band band--feature">
+      <p class="eyebrow">El diferencial</p>
+      <h2>El único asistente que sabe antes</h2>
+      <p class="band__lead">
+        Los asistentes de documentación transcriben. Prognosia además verifica:
+        un motor de seguridad determinista compara cada plan con la historia
+        clínica y retiene las indicaciones riesgosas, con la evidencia a la vista.
+      </p>
+      <div class="trace" role="img" aria-label="Ejemplo: historia clínica con asma severa, consulta que propone un betabloqueante, indicación retenida por seguridad">
+        <div class="trace__node">
+          <span class="trace__label">Historia clínica</span>
+          <span class="trace__value">Asma severa</span>
+        </div>
+        <span class="trace__arrow" aria-hidden="true">→</span>
+        <div class="trace__node">
+          <span class="trace__label">Consulta</span>
+          <span class="trace__value">“voy a indicar propranolol…”</span>
+        </div>
+        <span class="trace__arrow" aria-hidden="true">→</span>
+        <div class="trace__node trace__node--blocked">
+          <span class="trace__label">Seguridad</span>
+          <span class="trace__value">RETENIDO</span>
+        </div>
+      </div>
+      <p class="tiny band__note">Ejemplo real de la demo: un betabloqueante contraindicado con asma severa documentada no llega a la nota sin revisión.</p>
+    </section>
+
+    <!-- ===== Beneficios ===== -->
+    <section class="band" id="beneficios">
+      <p class="eyebrow">Impacto y beneficios</p>
+      <h2>Para todos los que están en la consulta</h2>
+      <div class="cols-3">
+        <div class="card">
+          <p class="card__kicker">Médicos y enfermeros</p>
+          <h3>Documentar sin escribir</h3>
+          <p>La evolución se redacta, estructura y carga sola. El profesional solo valida y edita si hace falta, en la consulta ambulatoria o evolucionando por voz en internación.</p>
+        </div>
+        <div class="card">
+          <p class="card__kicker">Pacientes</p>
+          <h3>Una atención más humana</h3>
+          <p>Con la documentación resuelta, toda la atención del profesional vuelve a la persona. Y el motor de seguridad agrega una capa extra de protección en cada indicación.</p>
+        </div>
+        <div class="card">
+          <p class="card__kicker">Institución</p>
+          <h3>Historias clínicas que respaldan</h3>
+          <p>Registros completos y consistentes desde el origen: menos errores, mejor cobertura legal y un ciclo de facturación con menos fricción y menos rechazos.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Seguridad ===== -->
+    <section class="band" id="seguridad">
+      <p class="eyebrow">Confianza y seguridad</p>
+      <h2>Privacidad por arquitectura, no por promesa</h2>
+      <div class="cols-3">
+        <div class="card">
+          <p class="card__kicker">100% local</p>
+          <h3>Nada sale del consultorio</h3>
+          <p>Todo el procesamiento (la escucha, la redacción y la verificación de seguridad) ocurre en el dispositivo del profesional. Sin nube, sin enviar datos a terceros: no hay dato que se pueda filtrar porque el dato nunca viaja.</p>
+        </div>
+        <div class="card">
+          <p class="card__kicker">Cumplimiento</p>
+          <h3>Alineado con los estándares de salud</h3>
+          <p>Arquitectura de privacidad alineada con ISO/IEC 27001 e ISO 27799 (seguridad de la información en salud) y con la Ley 25.326 de Protección de Datos Personales.</p>
+        </div>
+        <div class="card">
+          <p class="card__kicker">Control profesional</p>
+          <h3>La firma siempre es humana</h3>
+          <p>Prognosia propone, el profesional dispone. Nada se escribe en la historia clínica sin revisión y firma, y las indicaciones retenidas muestran siempre su evidencia.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CTA final ===== -->
+    <section class="cta-final">
+      <h2>Empezá a documentar sin esfuerzo</h2>
+      <p>Descargá Prognosia y convertí tu próxima consulta en una nota lista para firmar.</p>
+      <a class="btn btn-gradient btn-lg" href="https://github.com/Repetto-A/AlephYRBR" target="_blank" rel="noopener">Descargar Prognosia</a>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Todos los datos capturados durante una sesión de Prognosia son privados. Nada sale de tu dispositivo local.</p>
+    <p class="tiny">Arquitectura de privacidad alineada con ISO/IEC 27001 e ISO 27799 (seguridad de la información en salud) y la Ley 25.326 de Protección de Datos Personales.</p>
+    <p class="tiny legal">© 2026 Prognosia Health · Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+</html>
