@@ -20,14 +20,15 @@ Stack expuesto en `GET /api/config` → `stack` (`cloud_inference: false`).
 Modelos: `WHISPER_BASE_Q8_0` + `VAD_SILERO` · `QWEN3_4B_INST_Q4_K_M` · reglas
 en `prognosia/rules.py` · agente HCE en `prognosia/propose.py` (sin LLM).
 
-Repo: https://github.com/Repetto-A/AlephYRBR
+Repo: https://github.com/Repetto-A/Prognosia
 
 ## Setup
 
 Requiere Python 3.12 (≥ 3.10) y Node.js ≥ 22.17 (para el worker QVAC).
 
 ```powershell
-cd "C:\Users\conta\Documents\Ale\Software\Current Projects\AlephYRBR"
+git clone https://github.com/Repetto-A/Prognosia.git
+cd Prognosia
 py -3.12 -m venv .venv-qvac
 .\.venv-qvac\Scripts\Activate.ps1
 pip install tetherto-qvac-sdk==0.17.1 starlette uvicorn
@@ -46,13 +47,13 @@ fallara, ver los workarounds en `docs/prep-entorno.md`, sección 2.
 python -m prognosia run --hc corpus/clinic/hc-a.json --audio corpus/clinic/consulta-a.wav
 
 # Caso B — control negativo: HTA sin asma + plan inocuo → SAFE
-python -m prognosia run --hc corpus/clinic/hc-b.json --transcript corpus/clinic/consulta-b.txt
+python -m prognosia run --hc corpus/clinic/hc-b.json --audio corpus/clinic/consulta-b.wav
 ```
 
 Cada corrida imprime el transcript, la nota SOAP en JSON y el veredicto, y
 escribe `out/run-<paciente>.json` + `out/run-<paciente>.html`. También se
 puede correr el caso A sin audio: `--transcript corpus/clinic/consulta-a.txt`
-(transcript gold, nota más limpia).
+(transcript gold, fallback si falla Whisper).
 
 ## Shell web local (fase 2A) — sala de consulta
 
@@ -164,8 +165,6 @@ Corpus sintético y mapeo a la demo: `corpus/clinic/README.md`.
 - [x] Reproducible (este README: setup, comandos, corpus, latencias)
 - [x] Ensayo < 3 min (68 s de comandos + narrativa; UI `--fast` ~1 s/caso)
 
-Caveat conocido: el audio de demo es TTS con voz en-US leyendo español (no hay
-voz TTS en español en esta máquina), por eso el transcript del caso A con
-`--audio` sale distorsionado y la nota SOAP hereda ruido (la droga y el
-BLOCKED son estables igual). Con voz humana real o `--transcript` la nota sale
-limpia.
+Caveat: `consulta-a.wav` / `consulta-b.wav` son TTS neural es-AR (fallback si
+el mic falla). El audio difícil del spike (en-US) quedó en
+`consulta-a.hard-en-us.wav`. Si Whisper falla, usá `--transcript`.
