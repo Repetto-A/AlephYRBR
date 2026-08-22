@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClinicGuard — shell local</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@700&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="shell.css" />
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <a class="brand-mark" href="#" id="brand-home" translate="no">ClinicGuard</a>
+        <span class="sub" id="topbar-sub">preparar consulta</span>
+      </div>
+      <div class="seal" title="Inferencia 100% local">Local · QVAC · sin red</div>
+    </header>
+
+    <nav class="nav-flow" aria-label="Flujo de demo">
+      <a href="#" data-nav="preparar">01 Preparar</a>
+      <a href="#" data-nav="escuchando" aria-disabled="true">02 Escuchar</a>
+      <a href="#" data-nav="draft" aria-disabled="true">03 Draft</a>
+      <a href="#" data-nav="aprobar" aria-disabled="true">04 Aprobar</a>
+    </nav>
+
+    <main id="contenido">
+
+      <!-- 01 Preparar -->
+      <section data-screen="preparar">
+        <div class="grid-75">
+          <section class="panel panel--elevated">
+            <h2>Agenda de hoy</h2>
+            <p class="muted">Seleccioná la consulta. Revisá la HC antes de activar la escucha.</p>
+            <ul class="patient-list" id="agenda"></ul>
+          </section>
+          <aside class="panel panel--dim">
+            <h3>Historia clínica (sintética)</h3>
+            <div id="hc-panel"></div>
+            <p class="tiny" style="margin-top: 16px">Datos de demostración. No usar información de pacientes reales.</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- 02 Escuchando / pipeline en curso -->
+      <section data-screen="escuchando" hidden>
+        <section class="panel panel--elevated listen">
+          <p class="tiny" id="listen-case" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0">Paciente A</p>
+          <h1 class="patient-name">Escuchando la consulta</h1>
+          <p class="muted" style="max-width: 36ch; margin: 0 auto">Hablá con el paciente como siempre. ClinicGuard arma el borrador al terminar.</p>
+          <div class="wave" role="img" aria-label="Audio en captura">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <ol class="progress-steps" id="progress-steps" aria-live="polite"></ol>
+          <p class="run-error tiny" id="run-error" hidden></p>
+          <div class="actions" style="justify-content: center">
+            <button class="btn btn-ghost" type="button" id="btn-cancelar">Cancelar</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- 03 / 04 Draft (alerta o limpio, se arma por JS) -->
+      <section data-screen="draft" hidden>
+        <div id="draft-banner"></div>
+        <div class="grid-75">
+          <section class="panel panel--elevated">
+            <h2>Borrador de nota</h2>
+            <p class="tiny" id="draft-estado"></p>
+            <article class="soap" id="soap"></article>
+            <details class="transcript-box">
+              <summary class="tiny" id="transcript-summary">Transcript</summary>
+              <p class="muted" id="transcript-text"></p>
+            </details>
+            <div class="actions" id="draft-actions"></div>
+            <p class="tiny" id="draft-hint" style="margin-top: 12px"></p>
+            <p class="tiny" id="draft-meta" style="margin-top: 6px"></p>
+          </section>
+          <aside class="panel" id="evidence-panel"></aside>
+        </div>
+      </section>
+
+      <!-- 05 Aprobar -->
+      <section data-screen="aprobar" hidden>
+        <div class="grid-75">
+          <section class="panel panel--elevated">
+            <h2>Revisá antes de firmar</h2>
+            <p class="muted">Nada llega a la historia clínica sin tu aprobación. Editá si hace falta.</p>
+            <label class="tiny" for="nota">Nota editable</label>
+            <textarea id="nota" class="note-doc" name="nota_clinica" rows="12" spellcheck="false" autocomplete="off"></textarea>
+            <div class="actions">
+              <button class="btn btn-primary" type="button" id="btn-aprobar">Aprobar nota</button>
+              <button class="btn btn-ghost" type="button" id="btn-volver-draft">Volver al draft</button>
+            </div>
+            <p class="tiny" style="margin-top: 12px">Si quedan bloqueos sin resolver, el botón Aprobar queda deshabilitado.</p>
+            <p class="tiny" id="aprobar-status" aria-live="polite"></p>
+          </section>
+          <aside class="panel">
+            <h3>Checklist FDE / demo</h3>
+            <ul class="muted" style="padding-left: 18px; line-height: 1.7; margin: 8px 0 0">
+              <li>Humano en el loop (como Nodica)</li>
+              <li>Near-miss visible: HC → audio → alerta</li>
+              <li>Sin claim de “diagnosticamos”</li>
+              <li>Sello local en header · WiFi off en video</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

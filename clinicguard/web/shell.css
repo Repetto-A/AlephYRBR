@@ -1,0 +1,80 @@
+/* Extras del shell local — solo lo que los mockups no cubren.
+   Los tokens y componentes viven en styles.css (copiado de design/mockups). */
+
+[hidden] {
+  display: none !important;
+}
+
+/* Nav como indicador de estado del flujo */
+.nav-flow a[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Pasos de progreso de la pipeline (pantalla 02) */
+.progress-steps {
+  list-style: none;
+  margin: 0 auto 8px;
+  padding: 0;
+  max-width: 52ch;
+  text-align: left;
+  font-size: var(--fs-sm);
+  color: var(--text-tertiary);
+  line-height: 1.7;
+}
+
+.progress-steps li {
+  padding-left: 18px;
+  position: relative;
+}
+
+.progress-steps li::before {
+  content: "·";
+  position: absolute;
+  left: 4px;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.progress-steps li:last-child {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.run-error {
+  color: var(--incident);
+  font-weight: 600;
+  max-width: 52ch;
+  margin: 8px auto;
+}
+
+/* Transcript plegable en el draft */
+.transcript-box {
+  margin-top: 18px;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+}
+
+.transcript-box summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.transcript-box p {
+  white-space: pre-wrap;
+  margin: 10px 0 0;
+}
+
+/* HC de ambos casos en el panel de preparar */
+.hc-case-title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+}
+
+.hc-case-title:first-child {
+  margin-top: 8px;
+}
