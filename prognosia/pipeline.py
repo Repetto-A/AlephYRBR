@@ -31,15 +31,46 @@ def _emit(progress: ProgressFn | None, stage: str, message: str, **extra: Any) -
 def _nota_demo(transcript: str) -> ClinicalNote:
     """Nota mínima para la UI cuando se saltea el LLM (--fast).
 
-    No inventa medicación: el bloqueo lo decide la regla sobre el transcript.
+    Si el transcript menciona una droga del corpus demo, la refleja en
+    medicacion_propuesta para que la propuesta HCE muestre write actions
+    (blocked_by_safety / pending_human). La decisión de safety sigue
+    viniendo de rules.py sobre el transcript crudo.
     """
+    from .schemas import ProposedMed
+
     preview = " ".join(transcript.split())[:220]
+    low = transcript.lower()
+    meds: list[ProposedMed] = []
+    if "propranolol" in low:
+        meds.append(
+            ProposedMed(
+                nombre="propranolol",
+                dosis="40 mg",
+                frecuencia="cada 12 horas",
+                via="oral",
+                evidencia="propranolol",
+            )
+        )
+    elif "enalapril" in low:
+        meds.append(
+            ProposedMed(
+                nombre="enalapril",
+                dosis="10 mg",
+                frecuencia="1 vez al día",
+                via="oral",
+                evidencia="enalapril",
+            )
+        )
     return ClinicalNote(
         subjetivo=f"{preview}…",
         objetivo="(a completar en la revisión)",
         evaluacion="(a completar en la revisión)",
-        plan="(a completar en la revisión; la verificación de seguridad ya corrió)",
-        medicacion_propuesta=[],
+        plan=(
+            "(a completar en la revisión; la verificación de seguridad ya corrió)"
+            if not meds
+            else f"Se menciona {meds[0].nombre}. (a completar en la revisión; la verificación de seguridad ya corrió)"
+        ),
+        medicacion_propuesta=meds,
     )
 
 
