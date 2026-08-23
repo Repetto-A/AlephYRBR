@@ -105,7 +105,7 @@ function nombreDe(c) {
 
 /* ===== Vistas ===== */
 
-const VIEWS = ["home", "patients", "consult", "prefs", "profile"];
+const VIEWS = ["home", "cal", "patients", "consult", "prefs", "profile"];
 
 function setView(view) {
   state.view = view;
@@ -117,6 +117,7 @@ function setView(view) {
     b.setAttribute("aria-current", b.dataset.nav === view ? "true" : "false");
   });
   if (view === "home") renderHome();
+  if (view === "cal") renderCalDay();
   if (view === "patients") renderPatients();
   if (view === "prefs") fillPrefsForm();
   if (view === "profile") fillProfileForm();
@@ -171,25 +172,47 @@ function renderDoctor() {
 
 /* ===== Agenda del día (horarios de demo sobre pacientes reales) ===== */
 
-const SLOT_TIMES = ["09:00", "09:40", "10:20", "11:40", "14:00", "14:40", "15:20", "16:00", "16:40", "17:20"];
+const SLOT_MINS = [540, 580, 620, 700, 840, 880, 920, 960, 1000, 1040];
+const CITA_DUR = 35;
 
-function scheduleToday() {
-  const rows = state.cases.map((c, i) => ({
-    tipo: "caso",
+function fmtHora(min) {
+  return `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+}
+
+function buildSchedule() {
+  state.schedule = state.cases.map((c, i) => ({
+    id: "cita-" + c.id,
     caseId: c.id,
-    hora: SLOT_TIMES[i % SLOT_TIMES.length],
+    hora: SLOT_MINS[i % SLOT_MINS.length],
+    dur: CITA_DUR,
     nombre: nombreDe(c),
     motivo: c.descripcion || "Consulta",
-    estado: state.signedToday[c.id] ? "atendida" : "confirmada",
+    cancelada: false,
   }));
-  rows.splice(Math.min(3, rows.length), 0, {
-    tipo: "cancelada",
-    hora: "11:00",
+  state.schedule.push({
+    id: "cita-maria",
+    caseId: null,
+    hora: 660,
+    dur: CITA_DUR,
     nombre: "María Torres",
     motivo: "Renovación de recetas",
-    estado: "cancelada",
+    cancelada: true,
   });
-  return rows;
+}
+
+function citaEstado(r) {
+  if (r.cancelada) return "cancelada";
+  if (r.caseId && state.signedToday[r.caseId]) return "atendida";
+  return "confirmada";
+}
+
+function scheduleToday() {
+  if (!state.schedule) buildSchedule();
+  return [...state.schedule].sort((a, b) => a.hora - b.hora).map((r) => ({
+    ...r,
+    horaTxt: fmtHora(r.hora),
+    estado: citaEstado(r),
+  }));
 }
 
 function renderHome() {
@@ -215,7 +238,7 @@ function renderHome() {
   $("#dash-agenda").innerHTML = agenda
     .map((r) => `
       <li><button type="button" class="agenda-row" data-case="${esc(r.caseId || "")}" data-cancelada="${r.estado === "cancelada"}">
-        <span class="agenda-row__time">${esc(r.hora)}</span>
+        <span class="agenda-row__time">${esc(r.horaTxt)}</span>
         <span class="agenda-row__name">${esc(r.nombre)}</span>
         <span class="agenda-row__motivo">${esc(r.motivo)}</span>
         <span class="agenda-badge" data-k="${esc(r.estado)}">${esc(r.estado)}</span>
@@ -252,6 +275,188 @@ function renderCalendar() {
     html += `<span class="${cls.join(" ")}">${d}</span>`;
   }
   $("#dash-cal").innerHTML = html;
+}
+
+/* ===== Agenda de día (calendario con drag & drop) ===== */
+
+const CAL_START = 480;
+const CAL_END = 1080;
+const PX_MIN = 840 / (CAL_END - CAL_START);
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+}
+
+function renderCalDay() {
+  if (!state.schedule) buildSchedule();
+  const hoy = new Date();
+  $("#cal-day-date").textContent = hoy.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+  const box = $("#cal-day");
+  let html = "";
+  for (let m = CAL_START; m <= CAL_END; m += 30) {
+    const top = (m - CAL_START) * PX_MIN;
+    const half = m % 60 !== 0;
+    html += `<div class="cal-hour${half ? " cal-hour--half" : ""}" style="top:${top}px">${half ? "" : fmtHora(m)}</div>`;
+  }
+  const ahora = hoy.getHours() * 60 + hoy.getMinutes();
+  if (ahora >= CAL_START && ahora <= CAL_END) {
+    html += `<div class="cal-now" data-hora="${fmtHora(ahora)}" style="top:${(ahora - CAL_START) * PX_MIN}px"></div>`;
+  }
+  box.innerHTML = html;
+  for (const r of scheduleToday()) {
+    const el = document.createElement("div");
+    el.className = "cal-evt";
+    el.dataset.cita = r.id;
+    el.dataset.estado = r.estado;
+    el.style.top = (r.hora - CAL_START) * PX_MIN + "px";
+    el.style.height = Math.max(34, r.dur * PX_MIN) + "px";
+    el.innerHTML = `
+      <span class="cal-evt__time">${esc(r.horaTxt)}</span>
+      <span class="cal-evt__body"><b>${esc(r.nombre)}</b><span>${esc(r.motivo)}</span></span>
+      <button type="button" class="cal-evt__x" title="${r.estado === "cancelada" ? "Eliminar cita" : "Cancelar cita"}" aria-label="Cancelar cita">✕</button>`;
+    attachEvtHandlers(el);
+    box.appendChild(el);
+  }
+}
+
+function citaById(id) {
+  return (state.schedule || []).find((r) => r.id === id) || null;
+}
+
+function attachEvtHandlers(el) {
+  const id = el.dataset.cita;
+
+  el.querySelector(".cal-evt__x").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const r = citaById(id);
+    if (!r) return;
+    if (r.cancelada) {
+      state.schedule = state.schedule.filter((x) => x.id !== id);
+      toast(`Cita de ${r.nombre} eliminada.`);
+    } else {
+      r.cancelada = true;
+      toast(`Cita de ${r.nombre} cancelada.`);
+    }
+    renderCalDay();
+  });
+
+  let drag = null;
+  el.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".cal-evt__x")) return;
+    const r = citaById(id);
+    if (!r) return;
+    drag = { startY: e.clientY, horaInicial: r.hora, moved: false };
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dy = e.clientY - drag.startY;
+    if (Math.abs(dy) > 6) drag.moved = true;
+    if (!drag.moved) return;
+    el.classList.add("dragging");
+    const r = citaById(id);
+    let nueva = drag.horaInicial + Math.round(dy / PX_MIN / 10) * 10;
+    nueva = Math.max(CAL_START, Math.min(CAL_END - r.dur, nueva));
+    r.hora = nueva;
+    el.style.top = (nueva - CAL_START) * PX_MIN + "px";
+    el.querySelector(".cal-evt__time").textContent = fmtHora(nueva);
+  });
+  el.addEventListener("pointerup", () => {
+    if (!drag) return;
+    const fueDrag = drag.moved;
+    drag = null;
+    el.classList.remove("dragging");
+    const r = citaById(id);
+    if (fueDrag) {
+      toast(`Cita de ${r.nombre} movida a ${fmtHora(r.hora)}.`);
+      renderCalDay();
+    } else {
+      openCitaPop(id);
+    }
+  });
+}
+
+function openCitaPop(id) {
+  const r = citaById(id);
+  if (!r) return;
+  const c = state.cases.find((x) => x.id === r.caseId) || null;
+  const hc = c?.hc || null;
+  const ant = hc ? (hc.antecedentes || []).map((a) => `${a.condicion}${a.severidad ? ` (${a.severidad})` : ""}`).join(" · ") : "";
+  const med = hc ? (hc.medicacion_actual || []).map((m) => `${m.droga}${m.dosis ? ` ${m.dosis}` : ""}`).join(" · ") : "";
+  const ale = hc ? ((hc.alergias || []).join(" · ") || "Ninguna conocida") : "";
+  const est = hc ? (hc.estudios || []).length : 0;
+  const enc = c?.encounters_count || 0;
+  const estado = citaEstado(r);
+  $("#cita-pop-card").innerHTML = `
+    <h3>${esc(r.nombre)}${hc?.edad ? `, ${esc(String(hc.edad))} años` : ""}</h3>
+    <p class="cita-pop__sub">${esc(fmtHora(r.hora))} hs · ${esc(r.motivo)} · <span class="agenda-badge" data-k="${esc(estado)}">${esc(estado)}</span></p>
+    ${hc ? `
+    <dl>
+      <dt>Antecedentes</dt><dd>${esc(ant || "Sin antecedentes registrados")}</dd>
+      <dt>Alergias</dt><dd>${esc(ale)}</dd>
+      <dt>Medicación habitual</dt><dd>${esc(med || "Sin medicación registrada")}</dd>
+      <dt>Historial</dt><dd>${enc} consulta${enc === 1 ? "" : "s"} registrada${enc === 1 ? "" : "s"} · ${est} estudio${est === 1 ? "" : "s"}</dd>
+    </dl>` : `<p class="muted" style="font-size:.9rem">Sin ficha en la clínica (cita externa).</p>`}
+    <div class="actions">
+      ${c && estado !== "cancelada" ? `<button class="btn btn-primary" type="button" id="pop-iniciar">Iniciar consulta</button>` : ""}
+      ${estado !== "cancelada" ? `<button class="btn btn-ghost" type="button" id="pop-cancelar">Cancelar cita</button>` : `<button class="btn btn-ghost" type="button" id="pop-eliminar">Eliminar</button>`}
+      <button class="btn btn-ghost" type="button" id="pop-cerrar">Cerrar</button>
+    </div>`;
+  $("#cita-pop").hidden = false;
+  $("#pop-cerrar").addEventListener("click", closeCitaPop);
+  $("#pop-iniciar")?.addEventListener("click", () => { closeCitaPop(); openConsult(r.caseId); });
+  $("#pop-cancelar")?.addEventListener("click", () => {
+    r.cancelada = true;
+    closeCitaPop();
+    renderCalDay();
+    toast(`Cita de ${r.nombre} cancelada.`);
+  });
+  $("#pop-eliminar")?.addEventListener("click", () => {
+    state.schedule = state.schedule.filter((x) => x.id !== r.id);
+    closeCitaPop();
+    renderCalDay();
+    toast(`Cita de ${r.nombre} eliminada.`);
+  });
+}
+
+function closeCitaPop() {
+  $("#cita-pop").hidden = true;
+}
+
+function openNuevaCita(hora) {
+  const opts = state.cases.map((c) => `<option value="${esc(c.id)}">${esc(nombreDe(c))}</option>`).join("");
+  $("#cita-pop-card").innerHTML = `
+    <h3>Nueva cita</h3>
+    <p class="cita-pop__sub">${esc(fmtHora(hora))} hs · elegí el paciente</p>
+    <select id="nueva-cita-paciente" class="note-doc" style="margin:0 0 16px;width:100%">${opts}</select>
+    <div class="actions">
+      <button class="btn btn-primary" type="button" id="pop-crear">Agendar</button>
+      <button class="btn btn-ghost" type="button" id="pop-cerrar">Cerrar</button>
+    </div>`;
+  $("#cita-pop").hidden = false;
+  $("#pop-cerrar").addEventListener("click", closeCitaPop);
+  $("#pop-crear").addEventListener("click", () => {
+    const caseId = $("#nueva-cita-paciente").value;
+    const c = state.cases.find((x) => x.id === caseId);
+    if (!c) return;
+    state.schedule.push({
+      id: "cita-" + caseId + "-" + Date.now(),
+      caseId,
+      hora,
+      dur: CITA_DUR,
+      nombre: nombreDe(c),
+      motivo: c.descripcion || "Consulta",
+      cancelada: false,
+    });
+    closeCitaPop();
+    renderCalDay();
+    toast(`Cita de ${nombreDe(c)} agendada a las ${fmtHora(hora)}.`);
+  });
 }
 
 /* ===== Lista de pacientes con búsqueda ===== */
@@ -380,6 +585,18 @@ async function submitPatient(event) {
     if (!res.ok) throw new Error((await res.json()).error || res.statusText);
     const nuevo = await res.json();
     state.cases.push(nuevo);
+    if (state.schedule) {
+      const ultima = Math.max(CAL_START, ...state.schedule.map((r) => r.hora + r.dur));
+      state.schedule.push({
+        id: "cita-" + nuevo.id,
+        caseId: nuevo.id,
+        hora: Math.min(CAL_END - CITA_DUR, ultima + 5),
+        dur: CITA_DUR,
+        nombre: nuevo.titulo,
+        motivo: nuevo.descripcion || "Consulta",
+        cancelada: false,
+      });
+    }
     $("#patient-form").reset();
     toggleForm(false);
     renderPatients();
@@ -1335,6 +1552,19 @@ $("#btn-dash-nuevo").addEventListener("click", () => {
   toggleForm(true);
 });
 $("#patient-search").addEventListener("input", renderPatients);
+$("#cal-day").addEventListener("click", (e) => {
+  if (e.target.closest(".cal-evt")) return;
+  const rect = $("#cal-day").getBoundingClientRect();
+  let hora = CAL_START + Math.round((e.clientY - rect.top) / PX_MIN / 10) * 10;
+  hora = Math.max(CAL_START, Math.min(CAL_END - CITA_DUR, hora));
+  openNuevaCita(hora);
+});
+$("#cita-pop").addEventListener("click", (e) => {
+  if (e.target === $("#cita-pop")) closeCitaPop();
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("#cita-pop").hidden) closeCitaPop();
+});
 $("#prefs-form").addEventListener("submit", (e) => {
   e.preventDefault();
   localStorage.setItem(PREFS_KEY, JSON.stringify({

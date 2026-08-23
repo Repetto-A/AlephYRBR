@@ -949,3 +949,137 @@
 .clinic-card__body span { color: #bbc7c6; font-size: 0.8rem; }
 
 #view-prefs select.note-doc, #view-prefs textarea.note-doc { width: 100%; }
+
+/* ===== Agenda de día (estilo calendario) ===== */
+.cal-day {
+  position: relative;
+  height: 840px;
+  user-select: none;
+}
+
+.cal-hour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-muted);
+  font-family: var(--font-vital);
+  font-size: 0.66rem;
+  padding-left: 6px;
+}
+
+.cal-hour--half { border-top-style: dashed; opacity: 0.5; }
+
+.cal-now {
+  position: absolute;
+  left: 52px;
+  right: 0;
+  height: 2px;
+  background: var(--incident);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cal-now::before {
+  content: attr(data-hora);
+  position: absolute;
+  left: -50px;
+  top: -7px;
+  font-family: var(--font-vital);
+  font-size: 0.64rem;
+  color: var(--incident);
+}
+
+.cal-evt {
+  position: absolute;
+  left: 58px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(203, 255, 252, 0.25);
+  background: var(--brand-soft);
+  color: var(--text-primary);
+  cursor: grab;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.cal-evt:hover { border-color: var(--brand); }
+.cal-evt.dragging { opacity: 0.85; cursor: grabbing; z-index: 5; box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.5); }
+
+.cal-evt__time { font-family: var(--font-vital); font-size: 0.7rem; color: var(--brand-ink); white-space: nowrap; }
+.cal-evt__body { min-width: 0; }
+.cal-evt__body b { display: block; font-weight: 500; font-size: 0.86rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-evt__body span { font-size: 0.72rem; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+.cal-evt[data-estado="atendida"] { background: var(--ok-soft); border-color: rgba(125, 232, 195, 0.35); }
+.cal-evt[data-estado="cancelada"] { background: var(--incident-wash); border-color: rgba(255, 129, 119, 0.3); opacity: 0.6; }
+.cal-evt[data-estado="cancelada"] b { text-decoration: line-through; }
+
+.cal-evt__x {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.cal-evt:hover .cal-evt__x { opacity: 1; }
+.cal-evt__x:hover { color: var(--incident); background: var(--incident-wash); }
+
+/* ===== Popup de cita ===== */
+.cita-pop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(1, 20, 19, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.cita-pop {
+  width: min(460px, 100%);
+  max-height: 84vh;
+  overflow: auto;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px 28px;
+}
+
+.cita-pop h3 { margin: 0 0 2px; font-size: 1.2rem; font-weight: 500; letter-spacing: -0.02em; }
+.cita-pop .cita-pop__sub { color: var(--text-muted); font-size: var(--fs-sm); margin: 0 0 16px; }
+.cita-pop dl { margin: 0 0 16px; }
+.cita-pop dt { font-size: 0.64rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-top: 12px; }
+.cita-pop dd { margin: 3px 0 0; font-size: var(--fs-sm); color: var(--text-secondary); }
+.cita-pop .actions { flex-wrap: wrap; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 95;
+  background: var(--surface-card);
+  border: 1px solid var(--brand);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-size: var(--fs-sm);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.55);
+}
