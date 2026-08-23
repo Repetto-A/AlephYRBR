@@ -283,6 +283,16 @@
       </ol>
     </section>
 
+    <section id="producto" style="max-width:1120px;margin:0 auto;padding:76px 24px;border-top:1px solid rgba(255,255,255,.05)">
+      <p data-reveal="true" style="font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.15em;color:#bbc7c6;margin:0 0 18px;opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)">El producto</p>
+      <h2 data-reveal="true" style="font-size:clamp(1.7rem,4vw,2.4rem);font-weight:500;line-height:1.05;letter-spacing:-.03em;color:#ffffff;margin:0 0 16px;opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .08s,transform .8s cubic-bezier(.2,.7,.2,1) .08s">Miralo trabajar mientras atendés</h2>
+      <p data-reveal="true" style="max-width:52ch;font-size:1.05rem;margin:0 0 40px;color:#bbc7c6;text-wrap:pretty;opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .16s,transform .8s cubic-bezier(.2,.7,.2,1) .16s">A la izquierda, la consulta que se documenta sola. A la derecha, el momento en que un error no llega al paciente.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;justify-items:center">
+        <div data-reveal="true" data-mock="listen" style="width:100%;display:flex;justify-content:center;opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .1s,transform .8s cubic-bezier(.2,.7,.2,1) .1s"></div>
+        <div data-reveal="true" data-mock="block" style="width:100%;display:flex;justify-content:center;opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .25s,transform .8s cubic-bezier(.2,.7,.2,1) .25s"></div>
+      </div>
+    </section>
+
     <section style="max-width:1120px;margin:0 auto;padding:76px 24px;border-top:1px solid rgba(255,255,255,.05)">
       <p data-reveal="true" style="font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.15em;color:#bbc7c6;margin:0 0 18px;opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)">El diferencial</p>
       <h2 data-reveal="true" style="font-size:clamp(1.7rem,4vw,2.4rem);font-weight:500;line-height:1.05;letter-spacing:-.03em;color:#ffffff;margin:0 0 16px;opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .08s,transform .8s cubic-bezier(.2,.7,.2,1) .08s">El único asistente que sabe antes</h2>
@@ -586,28 +596,28 @@ var S = {};
 
   <section class="pg-slide">
     <img src="assets/prognosiatext.svg" alt="Prognosia Health" style="height:clamp(30px,4.5vw,52px);margin-bottom:38px" />
-    <h2>La nota se escribe sola.<br />El riesgo no pasa.</h2>
+    <h2>Escribe la consulta por vos.<br />Y no deja pasar errores.</h2>
     <p class="big">Asistente clínico con IA · 100% local</p>
   </section>
 
   <section class="pg-slide">
     <p class="k">El problema</p>
-    <h2><span class="accent">49%</span> del día en la pantalla.<br /><span class="accent">27%</span> con el paciente.</h2>
-    <p class="big">Más 1 a 2 horas de carga de datos cada noche.</p>
+    <h2>Más tiempo en la pantalla<br />que con el paciente.</h2>
+    <p class="big"><span class="accent">49%</span> del día en la historia clínica · <span class="accent">27%</span> cara a cara. Y 1 a 2 horas más de carga cada noche.</p>
     <p class="big" style="font-size:.8rem;color:#8fa3a1">AMA · Annals of Internal Medicine</p>
   </section>
 
   <section class="pg-slide">
     <p class="k">El costo</p>
-    <h2><span class="accent">30%</span> de los juicios por mala praxis</h2>
-    <p class="big">involucran una falla de comunicación. USD 238K por caso, 1.744 muertes en cinco años.</p>
+    <h2>Documentar mal se paga caro.</h2>
+    <p class="big"><span class="accent">30%</span> de los juicios por mala praxis involucran una falla de comunicación. USD 238K por caso · 1.744 muertes en cinco años.</p>
     <p class="big" style="font-size:.8rem;color:#8fa3a1">CRICO Strategies (Harvard), 23.658 reclamos</p>
   </section>
 
   <section class="pg-slide">
     <p class="k">La solución</p>
-    <h2>Escucha. Redacta. Verifica.</h2>
-    <p class="big">Prognosia arma la nota clínica mientras atendés, y compara cada indicación con la historia del paciente.</p>
+    <h2>Documentar deja de ser una carga.<br />Equivocarse deja de ser un riesgo.</h2>
+    <p class="big">Escucha. Redacta. Verifica. Prognosia arma la nota mientras atendés y compara cada indicación con la historia del paciente.</p>
   </section>
 
   <section class="pg-slide">
@@ -617,21 +627,22 @@ var S = {};
   </section>
 
   <section class="pg-slide">
+    <p class="k">El producto</p>
+    <h2>La consulta se documenta sola</h2>
+    <div data-mock="listen" style="display:flex;justify-content:center;width:100%"></div>
+  </section>
+
+  <section class="pg-slide">
     <p class="k">El diferencial</p>
     <h2>El único asistente que sabe antes</h2>
-    <div class="pg-deck-trace">
-      <span class="node">Asma severa</span>
-      <span style="color:#8fa3a1">→</span>
-      <span class="node">“voy a indicar propranolol…”</span>
-      <span style="color:#8fa3a1">→</span>
-      <span class="node bad">RETENIDO</span>
-    </div>
+    <div data-mock="block" style="display:flex;justify-content:center;width:100%"></div>
   </section>
 
   <section class="pg-slide">
     <p class="k">Compliance primero</p>
-    <h2>El dato no viaja.<br />La firma es humana.</h2>
-    <p class="big">ISO 27001 · ISO 27799 · Ley 25.326 · supervisión humana (UE 2024/1689) · trazabilidad ISO 42001</p>
+    <h2>Ninguna IA entra al hospital<br />si no pasa compliance.</h2>
+    <p class="big">Diseñada al revés: primero el requisito, después la función. El dato no viaja y la firma es humana.</p>
+    <p class="big" style="font-size:.85rem;color:#8fa3a1">ISO 27001 · ISO 27799 · Ley 25.326 · supervisión humana (UE 2024/1689) · ISO 42001</p>
   </section>
 
   <section class="pg-slide">
@@ -716,6 +727,92 @@ var S = {};
     else if (e.key === 'ArrowLeft' || e.key === 'Left' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
     else if (e.key === 'Escape') { closeDeck(); }
   });
+})();
+</script>
+
+<style>
+.pgm { position:relative; width:100%; max-width:480px; border:1px solid rgba(255,255,255,.1); border-radius:16px; overflow:hidden; background:linear-gradient(165deg,rgba(0,55,52,.96),rgba(1,29,28,.94)); text-align:left; font-size:13.5px; }
+.pgm__bar { display:flex; align-items:center; gap:6px; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.07); background:rgba(1,29,28,.7); }
+.pgm__dot { width:9px; height:9px; border-radius:999px; background:rgba(255,255,255,.14); }
+.pgm__title { margin-left:8px; font-size:.66rem; text-transform:uppercase; letter-spacing:.1em; color:#8fa3a1; }
+.pgm__body { padding:20px 22px 22px; }
+.pgm__head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.pgm__kicker { margin:0 0 3px; font-size:.62rem; text-transform:uppercase; letter-spacing:.12em; color:#8fa3a1; }
+.pgm__name { margin:0; font-size:1.05rem; font-weight:500; letter-spacing:-.02em; color:#ffffff; }
+.pgm__pill { font-size:.62rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; padding:5px 10px; border-radius:6px; border:1px solid rgba(203,255,252,.35); color:#cbfffc; white-space:nowrap; }
+.pgm__pill--live { animation:pgm-blink 1.6s ease-in-out infinite; }
+.pgm__pill--bad { border-color:rgba(255,129,119,.5); color:#ff8177; }
+@keyframes pgm-blink { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+.pgm__wave { display:flex; align-items:center; justify-content:center; gap:4px; height:34px; margin:6px 0 14px; }
+.pgm__wave span { width:3px; border-radius:2px; background:linear-gradient(180deg,#00827c,#cbfffc); animation:pgm-wave 1.1s ease-in-out infinite; }
+.pgm__wave span:nth-child(2n) { animation-delay:.15s; }
+.pgm__wave span:nth-child(3n) { animation-delay:.3s; }
+.pgm__wave span:nth-child(5n) { animation-delay:.45s; }
+@keyframes pgm-wave { 0%,100% { height:8px; opacity:.55; } 50% { height:26px; opacity:1; } }
+.pgm__line { margin:0 0 8px; color:#bbc7c6; line-height:1.45; }
+.pgm__line em { font-style:normal; color:#ff8177; font-weight:500; }
+.pgm__trace { display:flex; align-items:stretch; gap:8px; flex-wrap:wrap; margin:4px 0 12px; }
+.pgm__node { flex:1; min-width:118px; background:rgba(1,38,36,.75); border:1px solid rgba(255,255,255,.09); border-radius:10px; padding:10px 12px; }
+.pgm__node b { display:block; font-size:.6rem; font-weight:500; text-transform:uppercase; letter-spacing:.1em; color:#8fa3a1; margin-bottom:4px; }
+.pgm__node span { color:#ffffff; font-size:.82rem; }
+.pgm__node--bad { background:rgba(255,129,119,.1); border-color:rgba(255,129,119,.45); }
+.pgm__node--bad b, .pgm__node--bad span { color:#ff8177; }
+.pgm__alert { border-left:3px solid #ff8177; background:rgba(255,129,119,.09); border-radius:0 10px 10px 0; padding:10px 14px; margin:0 0 14px; color:#ffd9d5; font-size:.84rem; line-height:1.45; }
+.pgm__alert b { color:#ff8177; font-weight:500; }
+.pgm__actions { display:flex; gap:8px; flex-wrap:wrap; }
+.pgm__btn { display:inline-block; font-size:.62rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; border-radius:6px; padding:9px 14px; }
+.pgm__btn--primary { background:linear-gradient(90deg,#00827c,#cbfffc); color:#02201e; }
+.pgm__btn--ghost { border:1px solid rgba(255,255,255,.14); color:#5f716f; }
+.pgm__btn--danger { background:rgba(255,129,119,.14); border:1px solid rgba(255,129,119,.4); color:#ff8177; }
+.pgm [data-step] { opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+.pgm [data-step].on { opacity:1; transform:none; }
+</style>
+<script>
+(function () {
+  "use strict";
+  var TPL = {
+    listen: '<div class="pgm">'
+      + '<div class="pgm__bar"><span class="pgm__dot"></span><span class="pgm__dot"></span><span class="pgm__dot"></span><span class="pgm__title">Prognosia · Sala de consulta</span></div>'
+      + '<div class="pgm__body">'
+      + '<div class="pgm__head"><div><p class="pgm__kicker">Consulta en curso</p><p class="pgm__name">Ana López</p></div><span class="pgm__pill pgm__pill--live">Escuchando</span></div>'
+      + '<div class="pgm__wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>'
+      + '<p class="pgm__line" data-step="1">Paciente refiere palpitaciones y temblor de dos semanas…</p>'
+      + '<p class="pgm__line" data-step="2">Examen: FC 96 · PA 130/85 · auscultación normal.</p>'
+      + '<p class="pgm__line" data-step="3">Plan: “voy a indicar <em>propranolol</em> 40 mg cada 12 horas…”</p>'
+      + '<div class="pgm__actions" data-step="4"><span class="pgm__btn pgm__btn--danger">Terminar y armar la nota</span></div>'
+      + '</div></div>',
+    block: '<div class="pgm">'
+      + '<div class="pgm__bar"><span class="pgm__dot"></span><span class="pgm__dot"></span><span class="pgm__dot"></span><span class="pgm__title">Prognosia · Revisión de la nota</span></div>'
+      + '<div class="pgm__body">'
+      + '<div class="pgm__head"><div><p class="pgm__kicker">Atención: riesgo detectado</p><p class="pgm__name">Ana López</p></div><span class="pgm__pill pgm__pill--bad">Retenida</span></div>'
+      + '<div class="pgm__trace">'
+      + '<div class="pgm__node" data-step="1"><b>Historia clínica</b><span>Asma severa</span></div>'
+      + '<div class="pgm__node" data-step="2"><b>Consulta</b><span>“…indicar propranolol…”</span></div>'
+      + '<div class="pgm__node pgm__node--bad" data-step="3"><b>Seguridad</b><span>RETENIDO</span></div>'
+      + '</div>'
+      + '<p class="pgm__alert" data-step="4"><b>El plan contradice la historia clínica.</b> Propranolol está contraindicado con asma severa documentada. No se puede firmar sin corregir.</p>'
+      + '<div class="pgm__actions" data-step="5"><span class="pgm__btn pgm__btn--primary">Corregir el plan</span><span class="pgm__btn pgm__btn--ghost">Firmar nota</span></div>'
+      + '</div></div>'
+  };
+
+  var mocks = [];
+  document.querySelectorAll('[data-mock]').forEach(function (host) {
+    host.innerHTML = TPL[host.getAttribute('data-mock')] || '';
+    var steps = Array.prototype.slice.call(host.querySelectorAll('[data-step]'));
+    var max = steps.reduce(function (m, el) { return Math.max(m, +el.getAttribute('data-step')); }, 0);
+    mocks.push({ steps: steps, max: max, t: 0 });
+  });
+
+  if (mocks.length) {
+    setInterval(function () {
+      mocks.forEach(function (m) {
+        m.t = (m.t + 1) % (m.max + 4);
+        m.steps.forEach(function (el) {
+          el.classList.toggle('on', m.t >= +el.getAttribute('data-step'));
+        });
+      });
+    }, 1000);
+  }
 })();
 </script>
 </body>
