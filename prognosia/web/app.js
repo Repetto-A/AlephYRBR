@@ -105,11 +105,21 @@ function nombreDe(c) {
 
 /* ===== Vistas ===== */
 
+const VIEWS = ["home", "patients", "consult", "prefs", "profile"];
+
 function setView(view) {
   state.view = view;
-  $("#view-home").hidden = view !== "home";
-  $("#view-consult").hidden = view !== "consult";
+  VIEWS.forEach((v) => {
+    const el = $("#view-" + (v === "consult" ? "consult" : v));
+    if (el) el.hidden = v !== view;
+  });
+  document.querySelectorAll(".sidenav").forEach((b) => {
+    b.setAttribute("aria-current", b.dataset.nav === view ? "true" : "false");
+  });
   if (view === "home") renderHome();
+  if (view === "patients") renderPatients();
+  if (view === "prefs") fillPrefsForm();
+  if (view === "profile") fillProfileForm();
 }
 
 function homeStatus(msg) {
@@ -118,27 +128,216 @@ function homeStatus(msg) {
   el.hidden = !msg;
 }
 
+/* ===== Identidad del médico y memoria clínica (localStorage) ===== */
+
+const DOCTOR_KEY = "prognosia-doctor";
+const PREFS_KEY = "prognosia-prefs";
+
+const DOCTOR_DEFAULT = {
+  nombre: "Dra. Valeria Sosa",
+  especialidad: "Clínica médica",
+  matricula: "MN 112.334",
+  clinica: "Clínica del Parque",
+  sede: "CABA · Consultorio 12",
+};
+
+function loadJson(key, fallback) {
+  try {
+    return { ...fallback, ...(JSON.parse(localStorage.getItem(key)) || {}) };
+  } catch {
+    return { ...fallback };
+  }
+}
+
+function getDoctor() { return loadJson(DOCTOR_KEY, DOCTOR_DEFAULT); }
+function getPrefs() {
+  return loadJson(PREFS_KEY, { medicamentos: "", farmaceuticas: "", indicaciones: "", estilo: "concisa" });
+}
+
+function hasPrefs() {
+  const pr = getPrefs();
+  return Boolean(pr.medicamentos || pr.farmaceuticas || pr.indicaciones);
+}
+
+function renderDoctor() {
+  const d = getDoctor();
+  const iniciales = d.nombre.replace(/^Dra?\.?\s*/i, "").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "PR";
+  $("#doctor-avatar").textContent = iniciales;
+  $("#doctor-chip-name").textContent = d.nombre;
+  $("#doctor-chip-spec").textContent = d.especialidad;
+  $("#clinic-card-name").textContent = d.clinica;
+  $("#clinic-card-sede").textContent = d.sede;
+}
+
+/* ===== Agenda del día (horarios de demo sobre pacientes reales) ===== */
+
+const SLOT_TIMES = ["09:00", "09:40", "10:20", "11:40", "14:00", "14:40", "15:20", "16:00", "16:40", "17:20"];
+
+function scheduleToday() {
+  const rows = state.cases.map((c, i) => ({
+    tipo: "caso",
+    caseId: c.id,
+    hora: SLOT_TIMES[i % SLOT_TIMES.length],
+    nombre: nombreDe(c),
+    motivo: c.descripcion || "Consulta",
+    estado: state.signedToday[c.id] ? "atendida" : "confirmada",
+  }));
+  rows.splice(Math.min(3, rows.length), 0, {
+    tipo: "cancelada",
+    hora: "11:00",
+    nombre: "María Torres",
+    motivo: "Renovación de recetas",
+    estado: "cancelada",
+  });
+  return rows;
+}
+
 function renderHome() {
-  const box = $("#patient-cards");
-  box.innerHTML = "";
-  if (!state.cases.length) {
-    box.innerHTML = `<p class="muted">Todavía no hay pacientes cargados. Agregá el primero.</p>`;
+  const d = getDoctor();
+  const ahora = new Date();
+  const h = ahora.getHours();
+  const saludo = h < 13 ? "Buen día" : h < 20 ? "Buenas tardes" : "Buenas noches";
+  $("#dash-greeting").textContent = `${saludo}, ${d.nombre.split(" ")[0] === d.nombre ? d.nombre : d.nombre.replace(/^(Dra?\.?)\s+(\S+).*$/i, "$1 $2")}`;
+  $("#dash-date").textContent = ahora.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) + ` · ${d.clinica}`;
+
+  const agenda = scheduleToday();
+  const atendidas = agenda.filter((r) => r.estado === "atendida").length;
+  const canceladas = agenda.filter((r) => r.estado === "cancelada").length;
+  const pendientes = agenda.length - atendidas - canceladas;
+  const minutos = atendidas * 12;
+  $("#dash-stats").innerHTML = `
+    <div class="stat-tile"><b>${agenda.length - canceladas}</b><span>Citas hoy</span></div>
+    <div class="stat-tile"><b>${atendidas}</b><span>Atendidas</span></div>
+    <div class="stat-tile"><b>${pendientes}</b><span>Por atender</span></div>
+    <div class="stat-tile"><b>${canceladas}</b><span>Canceladas</span></div>
+    <div class="stat-tile"><b>${minutos}′</b><span>Tiempo ahorrado</span></div>`;
+
+  $("#dash-agenda").innerHTML = agenda
+    .map((r) => `
+      <li><button type="button" class="agenda-row" data-case="${esc(r.caseId || "")}" data-cancelada="${r.estado === "cancelada"}">
+        <span class="agenda-row__time">${esc(r.hora)}</span>
+        <span class="agenda-row__name">${esc(r.nombre)}</span>
+        <span class="agenda-row__motivo">${esc(r.motivo)}</span>
+        <span class="agenda-badge" data-k="${esc(r.estado)}">${esc(r.estado)}</span>
+      </button></li>`)
+    .join("");
+  $("#dash-agenda").querySelectorAll(".agenda-row").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.cancelada === "true" || !btn.dataset.case) return;
+      homeStatus("");
+      openConsult(btn.dataset.case);
+    });
+  });
+
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const hoy = new Date();
+  const y = hoy.getFullYear();
+  const m = hoy.getMonth();
+  $("#cal-title").textContent = hoy.toLocaleDateString("es-AR", { month: "long", year: "numeric" }).replace(/^./, (c) => c.toUpperCase());
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay() + 6) % 7;
+  const days = new Date(y, m + 1, 0).getDate();
+  const conCitas = new Set([hoy.getDate(), Math.min(days, hoy.getDate() + 2), Math.min(days, hoy.getDate() + 5), Math.max(1, hoy.getDate() - 3)]);
+  let html = ["L", "M", "M", "J", "V", "S", "D"].map((d) => `<span class="dow">${d}</span>`).join("");
+  for (let i = 0; i < offset; i++) html += `<span class="cal-day cal-day--off"></span>`;
+  for (let d = 1; d <= days; d++) {
+    const cls = ["cal-day"];
+    if (d === hoy.getDate()) cls.push("cal-day--today");
+    if (conCitas.has(d)) cls.push("cal-day--dot");
+    const dow = new Date(y, m, d).getDay();
+    if (dow === 0 || dow === 6) cls.push("cal-day--off");
+    html += `<span class="${cls.join(" ")}">${d}</span>`;
+  }
+  $("#dash-cal").innerHTML = html;
+}
+
+/* ===== Lista de pacientes con búsqueda ===== */
+
+function patientMatches(c, q) {
+  if (!q) return true;
+  const hc = c.hc || {};
+  const blob = [nombreDe(c), c.descripcion, (hc.antecedentes || []).map((a) => a.condicion).join(" "), (hc.alergias || []).join(" ")].join(" ").toLowerCase();
+  return q.toLowerCase().split(/\s+/).every((w) => blob.includes(w));
+}
+
+function renderPatients() {
+  const q = $("#patient-search").value.trim();
+  const list = $("#patient-list");
+  const visibles = state.cases.filter((c) => patientMatches(c, q));
+  $("#patients-count").textContent = q
+    ? `${visibles.length} de ${state.cases.length} pacientes`
+    : `${state.cases.length} pacientes en la clínica`;
+  if (!visibles.length) {
+    list.innerHTML = `<li class="patient-row" style="cursor:default"><span class="muted">Sin resultados para “${esc(q)}”.</span></li>`;
     return;
   }
-  for (const c of state.cases) {
-    const firmada = Boolean(state.signedToday[c.id]);
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "patient-card";
-    card.innerHTML = `
-      <span class="patient-card__name">${esc(nombreDe(c))}${c.hc?.edad ? `<span class="patient-card__age">, ${esc(String(c.hc.edad))} años</span>` : ""}</span>
-      <span class="patient-card__motivo">${esc(c.descripcion || "Consulta")}</span>
-      <span class="patient-card__estado" data-done="${firmada}">${firmada ? "Nota firmada" : "Pendiente"}</span>`;
-    card.addEventListener("click", () => {
-      homeStatus("");
-      openConsult(c.id);
-    });
-    box.appendChild(card);
+  list.innerHTML = visibles
+    .map((c) => {
+      const firmada = Boolean(state.signedToday[c.id]);
+      const ini = nombreDe(c).split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+      const enc = c.encounters_count ? ` · ${c.encounters_count} consulta${c.encounters_count === 1 ? "" : "s"}` : "";
+      return `
+      <li><button type="button" class="patient-row" data-case="${esc(c.id)}">
+        <span class="patient-row__avatar">${esc(ini)}</span>
+        <span class="patient-row__meta">
+          <b>${esc(nombreDe(c))}${c.hc?.edad ? `, ${esc(String(c.hc.edad))} años` : ""}</b>
+          <span>${esc(c.descripcion || "Consulta")}${enc}</span>
+        </span>
+        <span class="patient-card__estado" data-done="${firmada}">${firmada ? "Nota firmada" : "Pendiente"}</span>
+      </button></li>`;
+    })
+    .join("");
+  list.querySelectorAll(".patient-row[data-case]").forEach((btn) => {
+    btn.addEventListener("click", () => openConsult(btn.dataset.case));
+  });
+}
+
+/* ===== Formularios de memoria y perfil ===== */
+
+function fillPrefsForm() {
+  const pr = getPrefs();
+  $("#pref-medicamentos").value = pr.medicamentos;
+  $("#pref-farmaceuticas").value = pr.farmaceuticas;
+  $("#pref-indicaciones").value = pr.indicaciones;
+  $("#pref-estilo").value = pr.estilo;
+}
+
+function fillProfileForm() {
+  const d = getDoctor();
+  $("#prof-nombre").value = d.nombre;
+  $("#prof-especialidad").value = d.especialidad;
+  $("#prof-matricula").value = d.matricula;
+  $("#prof-clinica").value = d.clinica;
+  $("#prof-sede").value = d.sede;
+}
+
+/* ===== Pacientes de demo para poblar la agenda ===== */
+
+const SEED_PATIENTS = [
+  { nombre: "Marta Quiroga", edad: 61, motivo: "Control de diabetes", antecedentes: "diabetes tipo 2, hipertensión arterial", medicacion: "metformina, losartán" },
+  { nombre: "Lucía Ferreyra", edad: 29, motivo: "Migraña recurrente", antecedentes: "asma severa", medicacion: "salbutamol" },
+  { nombre: "Raúl Mendoza", edad: 72, motivo: "Control post-operatorio", antecedentes: "cardiopatía isquémica", medicacion: "aspirina, atorvastatina" },
+  { nombre: "Carla Domínguez", edad: 38, motivo: "Chequeo anual", antecedentes: "", medicacion: "" },
+  { nombre: "Bruno Castillo", edad: 45, motivo: "Dolor lumbar", antecedentes: "", alergias: "ibuprofeno", medicacion: "" },
+  { nombre: "Tomás Aguirre", edad: 8, motivo: "Fiebre y tos", antecedentes: "", alergias: "penicilina", medicacion: "" },
+];
+
+async function seedDemoPatients() {
+  if (state.cases.length > 4) return;
+  for (const p of SEED_PATIENTS) {
+    try {
+      const res = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(p),
+      });
+      if (res.ok) state.cases.push(await res.json());
+    } catch {
+      /* demo */
+    }
   }
 }
 
@@ -183,7 +382,7 @@ async function submitPatient(event) {
     state.cases.push(nuevo);
     $("#patient-form").reset();
     toggleForm(false);
-    renderHome();
+    renderPatients();
     homeStatus(`${nuevo.titulo} quedó registrado. Abrí su ficha cuando llegue.`);
   } catch (err) {
     errorEl.textContent = `No se pudo guardar: ${err.message || err}`;
@@ -769,7 +968,8 @@ function renderDraft(run) {
   });
 
   $("#draft-meta").textContent =
-    "Generado en esta computadora · la información del paciente no salió de tu equipo.";
+    "Generado en esta computadora · la información del paciente no salió de tu equipo." +
+    (hasPrefs() ? " · Ajustado a tu memoria clínica." : "");
 }
 
 const ACTION_STATUS = {
@@ -1072,6 +1272,8 @@ async function boot() {
   await loadConfig();
   const res = await fetch("/api/cases");
   state.cases = await res.json();
+  await seedDemoPatients();
+  renderDoctor();
   setView("home");
 }
 
@@ -1125,6 +1327,36 @@ $("#brand-home").addEventListener("click", (e) => {
   setView("home");
 });
 $("#btn-back-home").addEventListener("click", () => setView("home"));
+document.querySelectorAll("[data-nav]").forEach((b) => {
+  b.addEventListener("click", () => setView(b.dataset.nav));
+});
+$("#btn-dash-nuevo").addEventListener("click", () => {
+  setView("patients");
+  toggleForm(true);
+});
+$("#patient-search").addEventListener("input", renderPatients);
+$("#prefs-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  localStorage.setItem(PREFS_KEY, JSON.stringify({
+    medicamentos: $("#pref-medicamentos").value.trim(),
+    farmaceuticas: $("#pref-farmaceuticas").value.trim(),
+    indicaciones: $("#pref-indicaciones").value.trim(),
+    estilo: $("#pref-estilo").value,
+  }));
+  $("#prefs-status").textContent = "Preferencias guardadas. Prognosia las tiene en cuenta al armar tus notas.";
+});
+$("#profile-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  localStorage.setItem(DOCTOR_KEY, JSON.stringify({
+    nombre: $("#prof-nombre").value.trim() || DOCTOR_DEFAULT.nombre,
+    especialidad: $("#prof-especialidad").value.trim(),
+    matricula: $("#prof-matricula").value.trim(),
+    clinica: $("#prof-clinica").value.trim(),
+    sede: $("#prof-sede").value.trim(),
+  }));
+  renderDoctor();
+  $("#profile-status").textContent = "Perfil actualizado.";
+});
 $("#btn-nuevo-paciente").addEventListener("click", () => toggleForm($("#new-patient-panel").hidden));
 $("#btn-form-cancel").addEventListener("click", () => toggleForm(false));
 $("#patient-form").addEventListener("submit", submitPatient);

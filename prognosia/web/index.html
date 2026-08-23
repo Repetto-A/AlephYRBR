@@ -7,34 +7,78 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=3" />
-  <link rel="stylesheet" href="shell.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="shell.css?v=4" />
   <link rel="icon" type="image/png" href="assets/prognosiaicon.png" />
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
-  <div class="app room">
-    <header class="topbar">
-      <div class="brand">
-        <a class="brand-mark" href="#" id="brand-home" translate="no"><img src="assets/prognosiatext.svg" alt="Prognosia Health" id="brand-logo" style="height:16px;display:block" /></a>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand-mark sidebar__brand" href="#" id="brand-home" translate="no"><img src="assets/prognosiatext.svg" alt="Prognosia Health" id="brand-logo" style="height:15px;display:block" /></a>
+      <nav class="sidebar__nav" aria-label="Secciones">
+        <button type="button" class="sidenav" data-nav="home" aria-current="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg>
+          Inicio
+        </button>
+        <button type="button" class="sidenav" data-nav="patients">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.4-4.8 5.5-4.8S14.5 16 14.5 19"/><path d="M15.5 5.4a3.2 3.2 0 0 1 0 5.2"/><path d="M17 14.4c2.1.6 3.5 2.1 3.5 4.6"/></svg>
+          Pacientes
+        </button>
+        <button type="button" class="sidenav" data-nav="prefs">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.7 3.9 4.3.4-3.2 2.8 1 4.2-3.8-2.3-3.8 2.3 1-4.2L6 7.3l4.3-.4z"/><path d="M5 19h14"/></svg>
+          Mi memoria
+        </button>
+      </nav>
+      <div class="sidebar__foot">
+        <button class="btn btn-ghost theme-toggle" id="btn-theme" type="button" aria-label="Cambiar a modo claro">Claro</button>
+        <button type="button" class="doctor-chip" data-nav="profile" id="doctor-chip">
+          <span class="doctor-chip__avatar" id="doctor-avatar">VS</span>
+          <span class="doctor-chip__meta"><b id="doctor-chip-name">Dra. Valeria Sosa</b><span id="doctor-chip-spec">Clínica médica</span></span>
+        </button>
       </div>
-      <button class="btn btn-ghost theme-toggle" id="btn-theme" type="button" aria-label="Cambiar a modo claro">Claro</button>
-    </header>
+    </aside>
 
-    <!-- ===== Vista: pacientes ===== -->
+  <div class="app room">
+
+    <!-- ===== Vista: inicio (dashboard) ===== -->
     <section id="view-home">
       <div class="home-head">
         <div>
-          <h1 class="home-title">Pacientes de hoy</h1>
-          <p class="muted" style="margin:6px 0 0">Elegí un paciente para empezar la consulta, o registrá uno nuevo.</p>
+          <h1 class="home-title" id="dash-greeting">Buen día</h1>
+          <p class="muted" id="dash-date" style="margin:6px 0 0"></p>
+        </div>
+        <button class="btn btn-primary" type="button" id="btn-dash-nuevo">Agregar paciente</button>
+      </div>
+      <p id="home-status" class="tiny home-status" aria-live="polite" hidden></p>
+      <div class="dash-stats" id="dash-stats"></div>
+      <div class="dash-grid">
+        <section class="panel dash-agenda">
+          <h3>Agenda de hoy</h3>
+          <ul class="agenda-list" id="dash-agenda"></ul>
+        </section>
+        <section class="panel dash-cal">
+          <h3 id="cal-title">Calendario</h3>
+          <div class="cal-grid" id="dash-cal"></div>
+          <p class="tiny" style="margin:12px 0 0">Los puntos marcan días con citas.</p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===== Vista: pacientes ===== -->
+    <section id="view-patients" hidden>
+      <div class="home-head">
+        <div>
+          <h1 class="home-title">Pacientes</h1>
+          <p class="muted" id="patients-count" style="margin:6px 0 0"></p>
         </div>
         <button class="btn btn-primary" type="button" id="btn-nuevo-paciente">Agregar paciente</button>
       </div>
-
-      <p id="home-status" class="tiny home-status" aria-live="polite" hidden></p>
-
-      <div class="patient-cards" id="patient-cards"></div>
-
+      <div class="patient-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15.5 15.5L20 20"/></svg>
+        <input type="search" id="patient-search" placeholder="Buscar por nombre, motivo o antecedente…" autocomplete="off" />
+      </div>
+      <ul class="patient-list" id="patient-list"></ul>
       <section class="panel new-patient" id="new-patient-panel" hidden>
         <h3>Nuevo paciente</h3>
         <form id="patient-form" class="patient-form" novalidate>
@@ -64,6 +108,82 @@
           <p class="tiny form-error" id="form-error" role="alert" hidden></p>
         </form>
       </section>
+    </section>
+
+    <!-- ===== Vista: mi memoria ===== -->
+    <section id="view-prefs" hidden>
+      <div class="home-head">
+        <div>
+          <h1 class="home-title">Mi memoria clínica</h1>
+          <p class="muted" style="margin:6px 0 0">Tus preferencias guían cómo Prognosia redacta y sugiere. Quedan guardadas solo en este equipo.</p>
+        </div>
+      </div>
+      <section class="panel" style="max-width:720px">
+        <form id="prefs-form" class="patient-form" novalidate>
+          <label class="patient-form__wide">Medicamentos con los que trabajo
+            <textarea id="pref-medicamentos" class="note-doc" rows="3" placeholder="Ej.: enalapril, metformina, budesonide/formoterol, amoxicilina…"></textarea>
+          </label>
+          <label class="patient-form__wide">Laboratorios / marcas que recomiendo
+            <textarea id="pref-farmaceuticas" class="note-doc" rows="2" placeholder="Ej.: prefiero genéricos; para inhaladores, marca X…"></textarea>
+          </label>
+          <label class="patient-form__wide">Indicaciones frecuentes
+            <textarea id="pref-indicaciones" class="note-doc" rows="3" placeholder="Ej.: siempre indico control a los 30 días; pauta de alarma por escrito…"></textarea>
+          </label>
+          <label>Estilo de nota
+            <select id="pref-estilo" class="note-doc" style="margin-top:0">
+              <option value="concisa">Concisa</option>
+              <option value="detallada">Detallada</option>
+            </select>
+          </label>
+          <div class="actions patient-form__wide">
+            <button class="btn btn-primary" type="submit">Guardar preferencias</button>
+          </div>
+          <p class="tiny" id="prefs-status" aria-live="polite"></p>
+        </form>
+      </section>
+    </section>
+
+    <!-- ===== Vista: perfil ===== -->
+    <section id="view-profile" hidden>
+      <div class="home-head">
+        <div>
+          <h1 class="home-title">Mi perfil</h1>
+          <p class="muted" style="margin:6px 0 0">Cómo aparecés en las notas que firmás.</p>
+        </div>
+      </div>
+      <div class="profile-grid">
+        <section class="panel">
+          <form id="profile-form" class="patient-form" novalidate>
+            <label>Nombre y título
+              <input type="text" id="prof-nombre" autocomplete="off" />
+            </label>
+            <label>Especialidad
+              <input type="text" id="prof-especialidad" autocomplete="off" />
+            </label>
+            <label>Matrícula
+              <input type="text" id="prof-matricula" autocomplete="off" />
+            </label>
+            <label>Institución
+              <input type="text" id="prof-clinica" autocomplete="off" />
+            </label>
+            <label class="patient-form__wide">Sede / consultorio
+              <input type="text" id="prof-sede" autocomplete="off" />
+            </label>
+            <div class="actions patient-form__wide">
+              <button class="btn btn-primary" type="submit">Guardar perfil</button>
+            </div>
+            <p class="tiny" id="profile-status" aria-live="polite"></p>
+          </form>
+        </section>
+        <section class="clinic-card">
+          <video src="assets/clinica.mp4" muted loop playsinline autoplay></video>
+          <div class="clinic-card__scrim"></div>
+          <div class="clinic-card__body">
+            <img src="assets/prognosiaicon.png" alt="" width="34" height="34" style="border-radius:8px" />
+            <div><b id="clinic-card-name">Clínica del Parque</b><span id="clinic-card-sede">CABA · Consultorio 12</span></div>
+          </div>
+        </section>
+      </div>
     </section>
 
     <!-- ===== Vista: consulta ===== -->
@@ -214,6 +334,7 @@
       <p class="tiny">Arquitectura de privacidad alineada con ISO/IEC 27001 e ISO 27799 (seguridad de la información en salud) y la Ley 25.326 de Protección de Datos Personales.</p>
       <p class="tiny site-footer__legal">© 2026 Prognosia Health · Todos los derechos reservados.</p>
     </footer>
+  </div>
   </div>
   <script src="app.js"></script>
 </body>
