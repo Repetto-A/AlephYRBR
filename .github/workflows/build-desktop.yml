@@ -1,0 +1,46 @@
+name: build-desktop
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: Prognosia-mac.zip
+          - os: windows-latest
+            artifact: Prognosia-windows.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install starlette uvicorn pydantic pyinstaller
+      - name: Build executable
+        run: python build-desktop.py
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: cd dist && zip -r ../Prognosia-mac.zip Prognosia
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: Copy-Item dist\Prognosia.exe Prognosia-windows.exe
+        shell: pwsh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact }}
