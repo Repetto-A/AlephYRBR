@@ -622,6 +622,11 @@ var S = {};
 .pg-team b { color:#ffffff; font-weight:500; font-size:1.05rem; margin-top:8px; }
 .pg-team a { color:#cbfffc; font-size:.85rem; text-decoration:none; }
 .pg-team .badge { color:#fde9ff; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; text-align:center; }
+
+.pg-mini i { display:block; margin-top:12px; font-style:normal; font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; color:#edfffe; }
+.pg-logos { display:flex; align-items:center; gap:12px; margin-top:28px; }
+.pg-logos span { font-size:.66rem; text-transform:uppercase; letter-spacing:.12em; color:#8fa3a1; margin-right:8px; }
+.pg-logos img { height:22px; display:block; }
 .pg-deck-btn { display:inline-flex; align-items:center; gap:10px; margin:6px 0 18px; font-size:.8rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; text-decoration:none; border-radius:6px; padding:16px 28px; color:#02201e; background:linear-gradient(90deg,#00827c,#cbfffc); }
 </style>
 
@@ -688,16 +693,13 @@ var S = {};
 
   <section class="pg-slide">
     <p class="k">La barrera real</p>
-    <h2>Solo el <span class="accent">26%</span> de los hospitales está preparado para la IA clínica</h2>
-    <p class="big">Supervisión humana, trazabilidad y gobernanza del dato ya son obligaciones, no opcionales.</p>
-    <p class="big" style="color:#ffffff">Prognosia llega con eso resuelto.</p>
-  </section>
-
-  <section class="pg-slide">
-    <p class="k">Compliance primero</p>
     <h2>Ninguna IA entra al hospital<br />si no pasa compliance.</h2>
-    <p class="big">Diseñada al revés: primero el requisito, después la función. El dato no viaja y la firma es humana.</p>
-    <p class="big" style="font-size:.85rem;color:#8fa3a1">ISO 27001 · ISO 27799 · Ley 25.326 · supervisión humana (UE 2024/1689) · ISO 42001</p>
+    <div class="pg-cols">
+      <div class="pg-mini"><b>El dato no viaja</b><span>Todo corre en el dispositivo. Sin nube, sin terceros.</span><i>ISO 27001 · ISO 27799 · Ley 25.326</i></div>
+      <div class="pg-mini"><b>La firma es humana</b><span>La IA propone. Nada entra a la historia clínica sin el profesional.</span><i>Supervisión humana · UE 2024/1689</i></div>
+      <div class="pg-mini"><b>Toda decisión, trazable</b><span>Cada indicación retenida muestra su evidencia. Motor determinista, no caja negra.</span><i>Gobernanza ISO/IEC 42001</i></div>
+    </div>
+    <p class="big" style="margin-top:24px">Solo el <span class="accent">26%</span> de los hospitales está preparado. <span style="color:#ffffff">Prognosia llega con eso resuelto.</span></p>
   </section>
 
   <section class="pg-slide">
@@ -710,6 +712,7 @@ var S = {};
       <p>• <b>Propuesta de registro en HCE</b> con aprobación humana</p>
       <p>• <b>App local</b> en Python + Starlette · cero llamadas a la nube</p>
     </div>
+    <div class="pg-logos"><span>Powered by</span><img src="assets/qvac-logo.svg" alt="QVAC" /><img src="assets/tether-logo.svg" alt="Tether" style="height:26px" /></div>
   </section>
 
   <section class="pg-slide">
