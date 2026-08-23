@@ -608,6 +608,21 @@ var S = {};
 #pg-deck-close { position:absolute; top:22px; right:26px; z-index:2; background:transparent; border:1px solid rgba(255,255,255,.18); color:#bbc7c6; border-radius:6px; padding:8px 14px; font:inherit; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; cursor:pointer; }
 #pg-deck-close:hover { color:#ffffff; border-color:#bbc7c6; }
 #pg-deck-hud { position:absolute; bottom:22px; left:0; right:0; z-index:2; display:flex; align-items:center; justify-content:center; gap:22px; color:#8fa3a1; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; }
+
+.pg-cols { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:960px; }
+.pg-mini { flex:1; min-width:220px; max-width:300px; background:rgba(0,55,52,.85); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:24px; text-align:left; }
+.pg-mini b { display:block; color:#edfffe; font-size:.68rem; font-weight:500; text-transform:uppercase; letter-spacing:.12em; margin-bottom:10px; }
+.pg-mini span { color:#bbc7c6; font-size:.95rem; line-height:1.5; }
+.pg-bullets { text-align:left; max-width:680px; display:grid; gap:12px; }
+.pg-bullets p { margin:0; color:#bbc7c6; font-size:clamp(.95rem,1.6vw,1.15rem); line-height:1.5; }
+.pg-bullets b { color:#ffffff; font-weight:500; }
+.pg-team { display:flex; gap:40px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.pg-team > div { display:flex; flex-direction:column; align-items:center; gap:6px; max-width:220px; }
+.pg-team img { width:120px; height:120px; border-radius:999px; object-fit:cover; border:2px solid rgba(203,255,252,.35); }
+.pg-team b { color:#ffffff; font-weight:500; font-size:1.05rem; margin-top:8px; }
+.pg-team a { color:#cbfffc; font-size:.85rem; text-decoration:none; }
+.pg-team .badge { color:#fde9ff; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; text-align:center; }
+.pg-deck-btn { display:inline-flex; align-items:center; gap:10px; margin:6px 0 18px; font-size:.8rem; font-weight:500; text-transform:uppercase; letter-spacing:.08em; text-decoration:none; border-radius:6px; padding:16px 28px; color:#02201e; background:linear-gradient(90deg,#00827c,#cbfffc); }
 </style>
 
 <div id="pg-deck" role="dialog" aria-modal="true" aria-label="Prognosia presentation">
@@ -642,7 +657,11 @@ var S = {};
   <section class="pg-slide">
     <p class="k">How it works</p>
     <h2>Three steps, zero friction</h2>
-    <p class="big"><span class="accent">01</span> Pick the patient · <span class="accent">02</span> See the patient as usual · <span class="accent">03</span> Review and sign</p>
+    <div class="pg-bullets">
+      <p><span class="accent">01</span> <b>Pick the patient:</b> your list for the day, chart always in sight.</p>
+      <p><span class="accent">02</span> <b>See the patient as usual:</b> Prognosia listens and drafts the note instantly.</p>
+      <p><span class="accent">03</span> <b>Review and sign:</b> if the plan conflicts with the chart, it is held before signing.</p>
+    </div>
   </section>
 
   <section class="pg-slide">
@@ -658,6 +677,23 @@ var S = {};
   </section>
 
   <section class="pg-slide">
+    <p class="k">Benefits</p>
+    <h2>For everyone in the room</h2>
+    <div class="pg-cols">
+      <div class="pg-mini"><b>Doctors and nurses</b><span>Document without typing: the note writes itself and the clinician just validates.</span></div>
+      <div class="pg-mini"><b>Patients</b><span>More human care, with an extra layer of protection on every order.</span></div>
+      <div class="pg-mini"><b>Institution</b><span>Records that hold up: fewer errors and fewer billing rejections.</span></div>
+    </div>
+  </section>
+
+  <section class="pg-slide">
+    <p class="k">The real barrier</p>
+    <h2>Only <span class="accent">26%</span> of hospitals are ready for clinical AI</h2>
+    <p class="big">Human oversight, traceability and data governance are already obligations, not extras.</p>
+    <p class="big" style="color:#ffffff">Prognosia arrives with that solved.</p>
+  </section>
+
+  <section class="pg-slide">
     <p class="k">Compliance first</p>
     <h2>No AI gets into a hospital<br />without passing compliance.</h2>
     <p class="big">Designed in reverse: requirement first, feature second. Data never travels and the signature is human.</p>
@@ -667,9 +703,29 @@ var S = {};
   <section class="pg-slide">
     <p class="k">Infrastructure</p>
     <h2>100% local. Zero cloud.</h2>
-    <p class="big">QVAC SDK (Tether): Whisper STT + Qwen3-4B running on-device.</p>
-    <p class="big">Safety through deterministic rules — no LLM in the decision. Local RAG over clinical guidelines.</p>
-    <p class="big">EHR write proposals with human approval. Local app in Python + Starlette.</p>
+    <div class="pg-bullets">
+      <p>• <b>QVAC SDK (Tether):</b> Whisper STT + Qwen3-4B running on-device</p>
+      <p>• <b>Deterministic safety:</b> rules with no LLM in the decision</p>
+      <p>• <b>Local RAG</b> over clinical guidelines (BM25)</p>
+      <p>• <b>EHR write proposals</b> with human approval</p>
+      <p>• <b>Local app</b> in Python + Starlette · zero cloud calls</p>
+    </div>
+  </section>
+
+  <section class="pg-slide">
+    <p class="k">Try it now</p>
+    <h2>prognosia.vercel.app</h2>
+    <a class="pg-deck-btn" href="https://github.com/Repetto-A/Prognosia/releases/latest/download/Prognosia-windows.exe"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.6l7.7-1.1v7H3zM12 4.3L21 3v8.5h-9zM3 12.5h7.7v7L3 18.4zM12 12.5h9V21l-9-1.3z"/></svg> Download for Windows</a>
+    <p class="big">Local demo: opens in your browser and nothing leaves your machine.</p>
+  </section>
+
+  <section class="pg-slide">
+    <p class="k">Team</p>
+    <div class="pg-team">
+      <div><img src="assets/team-ale.png" alt="Alejandro Repetto" /><b>Alejandro Repetto</b><a href="https://x.com/AleRepetto5" target="_blank" rel="noopener">@AleRepetto5</a></div>
+      <div><img src="assets/team-artu.jpg" alt="Arturo Grande" /><b>Arturo Grande</b><a href="https://x.com/ArtuGrande" target="_blank" rel="noopener">@ArtuGrande</a><span class="badge">12x web3 hackathon winner</span></div>
+      <div><img src="assets/team-ian.png" alt="Ian Duhamel Hayes" /><b>Ian Duhamel Hayes</b><a href="https://x.com/ian_duhamel" target="_blank" rel="noopener">@ian_duhamel</a></div>
+    </div>
   </section>
 
   <section class="pg-slide">
